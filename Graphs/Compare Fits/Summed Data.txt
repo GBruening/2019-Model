@@ -1,0 +1,1 @@
+Fitmethod expo minparams mass speed mvt_duration torque torque_rsq force force_rsq active_state active_state_rsq neural_drive neural_drive_rsq umber umber_rsq 
