@@ -115,7 +115,7 @@ legend([ColorPref(:)],mass_legend);
 xlabel('Movement Duration');ylabel(sprintf('Active State Dot^%g',expo));
 
 
-%% Total Force
+%% Total Muscle Force
 %figure(2);clf(2); hold on;
 subplot(2,2,3);hold on;
 for c = 1:4
@@ -140,6 +140,48 @@ end
 
 legend([ColorPref(:)],mass_legend);
 xlabel('Movement Duration');ylabel(sprintf('Muscle Force Dot^%g',expo));
+
+% cd('C:\Users\garrick\SkyDrive\Muscle modeling\Min_jerk files\Graphs');
+% figure(2);savefig('Total Force');
+% cd('C:\Users\garrick\SkyDrive\Muscle modeling\Min_jerk files');
+
+%% Total Output Force
+figure(2);clf(2); hold on;
+% subplot(2,2,3);hold on;
+for c = 1:4
+    for subj = 1:8
+        for s = 1:7
+            if isempty(vars{c,subj,s,t})
+                continue
+            end
+            f_out = 0;
+            for t=1:n_tar
+                fx_1 = -sin(theta{c,subj,s,t}.S).*...
+                    shoulder{c,subj,s,t}.torque/...
+                    upperarm{c,subj,s,t}.length;
+                fy_1 = cos(theta{c,subj,s,t}.S).*...
+                    shoulder{c,subj,s,t}.torque/...
+                    upperarm{c,subj,s,t}.length;
+                fx_2 = -sin(theta{c,subj,s,t}.S+theta{c,subj,s,t}.E).*...
+                    elbow{c,subj,s,t}.torque/...
+                    forearm{c,subj,s,t}.length + fx_1;
+                fy_2 = cos(theta{c,subj,s,t}.S+theta{c,subj,s,t}.E).*...
+                    elbow{c,subj,s,t}.torque/...
+                    forearm{c,subj,s,t}.length + fy_1;
+                fx_2 = sum(fx_2)*0.0025;
+                fy_2 = sum(fy_2)*0.0025;
+                f_out = f_out + sqrt(fx_2.^2+fy_2.^2);
+            end
+            f_out1(c,subj,s) = f_out/(vars{c,subj,s,t}.speeds(s)/n_tar);
+            ColorPref(c) = plot(vars{c,subj,s,t}.speeds(s),f_out/vars{c,subj,s,t}.speeds(s)/n_tar,...
+                'o','Color',ColorSet(c,:),'MarkerFaceColor',ColorSet(c,:));
+        end
+    end
+%     plot(vars{c,subj,s,t}.speeds,fsum1(c,:),'k-');
+end
+1;
+% legend([ColorPref(:)],mass_legend);
+% xlabel('Movement Duration');ylabel(sprintf('Muscle Force Dot^%g',expo));
 
 % cd('C:\Users\garrick\SkyDrive\Muscle modeling\Min_jerk files\Graphs');
 % figure(2);savefig('Total Force');
@@ -278,8 +320,10 @@ for c=1:4
             if met_data(c,subj,s)==0
                 1;
             end
-            A={c,subj,s,movedur(c,subj,s),met_data(c,subj,s),k1,tsum1(c,subj,s),fsum1(c,subj,s),...
-                ssum1(c,subj,s),asum1(c,subj,s),usum1(c,subj,s),bsum1(c,subj,s)};
+            A={c,subj,s,movedur(c,subj,s),met_data(c,subj,s),k1,...
+                tsum1(c,subj,s),f_out1(c,subj,s),fsum1(c,subj,s),...
+                ssum1(c,subj,s),asum1(c,subj,s),usum1(c,subj,s),...
+                bsum1(c,subj,s)};
             dlmwrite(excel_file,A,'-append');
         end
     end

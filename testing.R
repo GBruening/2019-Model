@@ -37,8 +37,8 @@ sumdata_rng <-read.csv(paste(parent_fold,'/Data_2-5-2019_rng.csv',sep=''))
 #================================================================
 # Do Plots?
 do_linfit_plots = 1
-do_param_errbar_plots = 0
-do_groupparam_plots = 0
+do_param_errbar_plots = 1
+do_groupparam_plots = 1
 
 #================================================================
 
@@ -47,13 +47,15 @@ index <- c(1,2,3,4,5,6,7,8,9)
 sumdata$minfunc <- values[match(sumdata$minfunc,index)]
 
 sumdata$sumtorque2 = sumdata$sumtorque^2
-sumdata$sumforce2 = sumdata$sumforce^2
+sumdata$sumforceout2 = sumdata$sumforceout^2
+sumdata$sumforcemus2 = sumdata$sumforcemus^2
 sumdata$sumstress2 = sumdata$sumstress^2
 sumdata$sumactstate2 = sumdata$sumactstate^2
 sumdata$sumdrive2 = sumdata$sumdrive^2
 
 sumdata_rng$sumtorque2 = sumdata_rng$sumtorque^2
-sumdata_rng$sumforce2 = sumdata_rng$sumforce^2
+sumdata_rng$sumforceout2 = sumdata_rng$sumforceout^2
+sumdata_rng$sumforcemus2 = sumdata_rng$sumforcemus^2
 sumdata_rng$sumstress2 = sumdata_rng$sumstress^2
 sumdata_rng$sumactstate2 = sumdata_rng$sumactstate^2
 sumdata_rng$sumdrive2 = sumdata_rng$sumdrive^2
@@ -96,8 +98,10 @@ minparams = c('stress',
 
 fitting_vars = c('sumtorque',
                  'sumtorque2',
-                 'sumforce',
-                 'sumforce2',
+                 'sumforceout',
+                 'sumforceout2',
+                 'sumforcemus',
+                 'sumforcemus2',
                  'sumstress',
                  'sumstress2',
                  'sumactstate',
@@ -107,8 +111,10 @@ fitting_vars = c('sumtorque',
                  'sumumber')
 fitting_labs = c('Sum of Torque\n(Nm)',
                  'Sum of Torque^2\n(Nm)^2',
-                 'Sum of Force\n(N)',
-                 'Sum of Force^2\n(N^2)',
+                 'Sum of Output Force\n(N)',
+                 'Sum of Output Force^2\n(N^2)',
+                 'Sum of Muscle Force\n(N)',
+                 'Sum of Muscle Force^2\n(N^2)',
                  'Sum of Stress\n(N/m^2)',
                  'Sum of Stress^2\n(N/m^2)^2',
                  'Sum of Active State',
@@ -148,6 +154,8 @@ fun.fit4 <- list()
 rsq_matrix = matrix(,nrow=length(minparams),ncol=length(fitting_labs))
 expo=1
 minfunc_count = 0
+
+# fitting_vars = fitting_vars[3]
 for (minfunc1 in minparams){
   minfunc_count = minfunc_count + 1
   varfit_count=0
@@ -268,7 +276,7 @@ for (minfunc1 in minparams){
     }
     #================================================================
     # Create parameter fits from utility model
-    if (var=='sumforce2' | var=='sumforce'){
+    if (var=='sumforcemus2' | var=='sumforcemus' | var=='sumforceout' | var=='sumforceout'){
       scale = 100
     } else if (var=='sumstress2' | var=='sumstress'){
       scale = 100
@@ -314,13 +322,14 @@ for (minfunc1 in minparams){
   if (do_linfit_plots){
     string = paste('lmgroupvar1_',minfunc1,
                    '=plot_grid(lmplot_',minfunc1,'_','sumtorque,
+                   lmplot_',minfunc1,'_','sumforceout,
+                   lmplot_',minfunc1,'_','sumforcemus,
                    lmplot_',minfunc1,'_','sumstress,
-                   lmplot_',minfunc1,'_','sumforce,
                    lmplot_',minfunc1,'_','sumactstate,
                    lmplot_',minfunc1,'_','sumdrive,
                    lmplot_',minfunc1,'_','sumumber,
                    align = \'vh\',
-                   labels = c(\'A\',\'B\',\'C\',\'D\',\'E\',\'F\'),
+                   labels = c(\'A\',\'B\',\'C\',\'D\',\'E\',\'F\',\'G\'),
                    hjust=-1,
                    nrow=2)',sep='')
     eval(parse(text=string))
@@ -334,12 +343,13 @@ for (minfunc1 in minparams){
     # Variable Raised to the 2nd
     string = paste('lmgroupvar2_',minfunc1,
                    '=plot_grid(lmplot_',minfunc1,'_','sumtorque2,
+                   lmplot_',minfunc1,'_','sumforceout2,
+                   lmplot_',minfunc1,'_','sumforcemus2,
                    lmplot_',minfunc1,'_','sumstress2,
-                   lmplot_',minfunc1,'_','sumforce2,
                    lmplot_',minfunc1,'_','sumactstate2,
                    lmplot_',minfunc1,'_','sumdrive2,
                    align = \'vh\',
-                   labels = c(\'A\',\'B\',\'C\',\'D\',\'E\',\'F\'),
+                   labels = c(\'A\',\'B\',\'C\',\'D\',\'E\',\'F\',\'G\'),
                    hjust=-1,
                    nrow=2)',sep='')
     eval(parse(text=string))
@@ -365,11 +375,13 @@ for (minfunc1 in minparams){
                    fit_plots[[9]],
                    fit_plots[[10]],
                    fit_plots[[11]],
+                   fit_plots[[12]],
+                   fit_plots[[13]],
                    add_legend,
                    align = \'vh\',
-                   labels = c(\'A\',\'B\',\'C\',\'D\',\'E\',\'F\',\'G\',\'H\',\'I\',\'J\',\'K\'),
+                   labels = c(\'A\',\'B\',\'C\',\'D\',\'E\',\'F\',\'G\',\'H\',\'I\',\'J\',\'K\',\'L\',\'M\'),
                    hjust=-1,
-                   nrow=3)',sep='')
+                   nrow=4)',sep='')
     eval(parse(text=string))
     # eval(parse(text = paste('fittedvar1_',minfunc1,'<-plot_grid(fittedvar1_',minfunc1,',add_legend,ncol=2,rel_widths=c(.85,.15))',sep='')))
     
@@ -383,7 +395,7 @@ for (minfunc1 in minparams){
     # string = paste('fittedvar2_',minfunc1,
     #                '=plot_grid(fitplot_sumtorque2,
     #                fitplot_sumstress2,
-    #                fitplot_sumforce2,
+    #                fitplot_sumforcemus2,
     #                fitplot_sumactstate2,
     #                fitplot_sumdrive2,
     #                align = \'vh\',
@@ -415,7 +427,8 @@ min_labs = c(TeX('Stress $(N/m^2)$'),
              TeX('Neural $Drive^2$'),
              TeX('Energy Model $(W)$'))
 fitting_labs = c(TeX('Torque (Nm)'),
-                 TeX('Force $(N)$'),
+                 TeX('Output Force $(N)$'),
+                 TeX('Muscle Force $(N)$'),
                  TeX('Stress $(N/m^2)$'),
                  TeX('Active State$'),
                  TeX('Neural Drive'),
@@ -428,15 +441,14 @@ fitting_labs = c(TeX('Torque (Nm)'),
                  TeX('Metabolic (W)'))
 
 if (do_linfit_plots){
-  ggplot(rsq_frame,aes(fill=factor(minfunc),x=factor(variable),y=rsquared),color='black')+
+  ggplot(rsq_frame,aes(fill=factor(minfunc),x=factor(variable),y=rsquared))+
     geom_bar(position='dodge',stat='identity')+
-    scale_x_discrete(labels=fitting_labs)+
-    scale_fill_manual(labels = min_labs, values = colorRampPalette(brewer.pal(9,"Spectral"))(9))+
-    labs(x='Fitted Variable',y='R Squared Value',fill=minparams)+
     theme_bw()+
     theme(axis.text.x = element_text(angle = 45, hjust = 1))+#,axis.line = element_line(color='black',size = 1,linetype='solid'))+
-    guides(fill=guide_legend(title="Minimization\nFunction"))
-    # theme(legend.position='none')
+    scale_x_discrete(labels=parse(text=fitting_labs))+
+    labs(x='Fitted Variable',y='R Squared Value',fill=minparams)+
+    guides(fill=guide_legend(title="Minimization\nFunction"))+
+    scale_fill_manual(labels = parse(text = min_labs), values = colorRampPalette(brewer.pal(9,"Spectral"))(9))
   setwd(paste(parent_fold,'/2019 Graphs',sep=''))
   ggsave('Rsq_matrix_expo1.pdf', useDingbats = FALSE,width=7,height=4.5,units='in')
 }
@@ -458,24 +470,28 @@ if (do_param_errbar_plots){
                 'drive2',
                 'umberger')
   fitting_vars = c('sumtorque',
-                   'sumforce',
+                   'sumforceout',
+                   'sumforcemus',
                    'sumstress',
                    'sumactstate',
                    'sumdrive',
                    'sumtorque2',
-                   'sumforce2',
+                   'sumforceout2',
+                   'sumforcemus2',
                    'sumstress2',
                    'sumactstate2',
                    'sumdrive2',
                    'sumumber',
                    'Metabolics')
   fitting_labs = c(TeX('Torque (Nm)'),
-                   TeX('Force $(N)$'),
+                   TeX('Output Force $(N)$'),
+                   TeX('Muscle Force $(N)$'),
                    TeX('Stress $(N/m^2)$'),
                    TeX('Active State$'),
                    TeX('Neural Drive'),
                    TeX('$Torque^2$ $(Nm)^2$'),
-                   TeX('$Force^2$ $(N^2)$'),
+                   TeX('$Output Force^2$ $(N^2)$'),
+                   TeX('$Muscle Force^2$ $(N^2)$'),
                    TeX('$Stress^2$ $(N/m^2)^2$'),
                    TeX('Active $State^2$'),
                    TeX('Neural $Drive^2$'),
@@ -495,7 +511,7 @@ if (do_param_errbar_plots){
   # paste('Sum of Energetics\n(Nm)'),
   # paste('Metabolic (W)'))
   
-  util_param_select = c(6,7,8,9,10,11,12)
+  util_param_select = c(7,8,9,10,11,12,13)
   fitting_vars = fitting_vars[util_param_select]
   fitting_labs = fitting_labs[util_param_select]
   parameter_frame2 = filter(parameter_frame,var_lab %in% fitting_vars)
@@ -582,19 +598,21 @@ if (do_groupparam_plots){
               TeX('Neural $Drive^2$'),
               TeX('Energy Model $(W)$'))
   fitting_vars = c('sumtorque',
-                   'sumforce',
+                   'sumforceout',
+                   'sumforcemus',
                    'sumstress',
                    'sumactstate',
                    'sumdrive',
                    'sumtorque2',
-                   'sumforce2',
+                   'sumforcemus2',
                    'sumstress2',
                    'sumactstate2',
                    'sumdrive2',
                    'sumumber',
                    'Metabolics')
   fitting_labs = c(TeX('Torque (Nm)'),
-                   TeX('Force $(N)$'),
+                   TeX('Output Force $(N)$'),
+                   TeX('Muscle Force $(N)$'),
                    TeX('Stress $(N/m^2)$'),
                    TeX('Active State$'),
                    TeX('Neural Drive'),
@@ -605,7 +623,7 @@ if (do_groupparam_plots){
                    TeX('Neural $Drive^2$'),
                    TeX('Energy Model $(W)$'),
                    TeX('Metabolic (W)'))
-  util_param_select = c(1,2,3,4,5,6,7,8,9,10,11,12)
+  util_param_select = c(1,2,3,4,5,6,7,8,9,10,11,12,13)
   fitting_vars = fitting_vars[util_param_select]
   fitting_labs = fitting_labs[util_param_select]
   temp_pframe = filter(parameter_frame,var_lab %in% fitting_vars)
