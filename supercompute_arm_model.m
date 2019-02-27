@@ -20,13 +20,13 @@ tic
 minfail = [];
 if exist('rnjesus');
     if rnjesus
-        filename = sprintf('aa_%scost_01-21-2018_rng',  minparams{L});
+        filename = sprintf('aa_%scost_01-21-2019_rng',  minparams{L});
     else
-        filename = sprintf('aa_%scost_01-21-2018',  minparams{L});
+        filename = sprintf('aa_%scost_01-21-2019',  minparams{L});
     end
 else
     rnjesus = 0;
-    filename = sprintf('aa_%scost_01-21-2018_rng',  minparams{L});
+    filename = sprintf('aa_%scost_01-21-2019_rng',  minparams{L});
 end
 
 fprintf('Processing %s \n',filename);
@@ -173,15 +173,15 @@ end
 clear shoulder1 elbow1 theta1 muscles1 act1 est1 tnew1
 
 toc
-% fprintf('aa_%scost_01-21-2018',  minparams{L});
+% fprintf('aa_%scost_01-21-2019',  minparams{L});
 if exist('rnjesus');
     if rnjesus
-        filename = sprintf('aa_%scost_01-21-2018_rng',  minparams{L});
+        filename = sprintf('aa_%scost_01-21-2019_rng',  minparams{L});
     else
-        filename = sprintf('aa_%scost_01-21-2018',  minparams{L});
+        filename = sprintf('aa_%scost_01-21-2019',  minparams{L});
     end
 else
-    filename = sprintf('aa_%scost_01-21-2018_rng',  minparams{L});
+    filename = sprintf('aa_%scost_01-21-2019_rng',  minparams{L});
 end
 
 save(filename);
