@@ -37,6 +37,7 @@ subj_heights = [162.5,167.60,195.6,167.6,180,172.7,175,171.5]/100;
 thetaE_start = [1.7049,1.7588,1.9786,1.7588,1.8696,1.8075,1.8280,1.7965];
 thetaS_start = [0.7008,0.6644,0.5089,0.6644,0.5876,0.6309,0.6167,0.6386];
 
+%http://www.ele.uri.edu/faculty/vetter/BME207/anthropometric-data.pdf
 upperarm_mass = 0.028*subj_mass/2.2;
 lowerarm_mass = 0.022*subj_mass/2.2;
 upperarm_length = (.825-.632)*subj_heights;
