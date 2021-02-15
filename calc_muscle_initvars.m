@@ -57,7 +57,6 @@ muscles.bb.coef_e = [-2.9883E-5,1.8047E-3,4.5322E-1,14.660];
 muscles.tb.coef_s = -25.40;
 muscles.tb.coef_e = [-3.5171E-9,13.277E-7,-19.092E-5,12.886E-3,-3.0284E-1,-23.287];
 
-
 muscles.an.m_arm_e = 2*polyval(muscles.an.coef_e,theta.E)/1000; %Divide by 10
 muscles.bs.m_arm_e = polyval(muscles.bs.coef_e,theta.E)/1000; %covnert mm to
 muscles.br.m_arm_e = polyval(muscles.br.coef_e,theta.E)/1000; %cm
@@ -163,7 +162,8 @@ muscles.bs.l0 = 0.090; %Chang
 muscles.br.l0 = 0.1887; %Langen
 muscles.da.l0 = 0.1296; %Langen
 muscles.dp.l0 = 0.1818; %Langen
-muscles.pc.l0 = 0.1701; %Langen
+% muscles.pc.l0 = 0.1701; %Langen % Rmoved 9/18/2019 As this length is for
+% the whole muscle, but the length is the clavicle portion.
 muscles.bb.l0 = 0.225; %Murray
 muscles.tb.l0 = 0.3235; %Murray
 
@@ -185,7 +185,7 @@ for ii = 1:length(muscles.an.m_arm_e)
         end
     end        
 end
-%%
+%
 % muscle_nums = {'an','bs','br','da','dp','pc','bb','tb'};
 % 
 % %from langenderfer 2004

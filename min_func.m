@@ -29,6 +29,13 @@ muscles.pc.force(ii,1) = x(6)*muscles.pc.pcsa;
 muscles.bb.force(ii,1) = x(7)*muscles.bb.pcsa;
 muscles.tb.force(ii,1) = x(8)*muscles.tb.pcsa;
 
+for muscle = muscle_nums
+    F_max = muscles.(muscle{1}).pcsa*Fl_Fv_for(muscles.(muscle{1}).length(ii)/muscles.(muscle{1}).l0,0,1);
+    if muscles.(muscle{1}).force(ii,1)/F_max>10
+        1;
+    end
+end
+
 min_force = 1E-10;
 output_force = 0;
 output_force2 = 0;

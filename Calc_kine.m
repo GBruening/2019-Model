@@ -24,14 +24,17 @@ y=Data.y(~isnan(Data.y(index)));
 a = x.^2 + y.^2 - upperarm.length.^2 - forearm.length.^2;
 b = 2 * upperarm.length * forearm.length;
 
-theta.E(index) = atan2(sqrt(1-(a.^2./b)),a./b);
+% https://www.youtube.com/watch?v=kAdbxsJZGto
+% theta.E(index) = atan2(sqrt(1-(a.^2./b)),a./b);
+theta.E(index) = acos(a./b);
 
 k1 = upperarm.length + forearm.length*cos(theta.E(index));
 k2 = forearm.length*sin(theta.E(index));
-theta.S(index) = atan2(y,x)-atan2(k2,k1);
+% theta.S(index) = atan2(y,x)-atan2(k2,k1);
+theta.S(index) = atan2(y,x)-asin(forearm.length.*sin(theta.E(index))./(sqrt(x.^2+y.^2)));
 
-s1 = diff23f5(theta.S,.0025,3);
-e1 = diff23f5(theta.E,.0025,3);
+s1 = diff23f5(theta.S,time_inc,3);
+e1 = diff23f5(theta.E,time_inc,3);
 theta.Sd = s1(:,2);
 theta.Ed = e1(:,2);
 theta.Sd(2) = (theta.Sd(1)+theta.Sd(3))/2;
@@ -113,6 +116,8 @@ for ii = 1:length(M11)
         Data.targetposition(2)-Data.startposition(2));
     eff_mass(ii) = norm(arm.M*[cos(move_angle) sin(move_angle)]')+1;
 end
-    
+if ~isreal(elbow.torque)
+    fprintf('ELBOW TORQUE NOT REAL\n');
+end
 end
 

@@ -1,4 +1,4 @@
-function[tme,x,y,vx,vy,ax,ay]=minjerk(ro,rf,tm,dt)
+function[Data]=minjerk(ro,rf,tm,dt)
 % MINJERK Usage: minjerk(ro,rf,tm,dt) ro,rf are (x,y)
 % initial and final positions
 % tm is the movement time dt is time increment.
@@ -35,6 +35,13 @@ vy=[v(1,2);v(1,2);v(1,2);v(:,2)];
 ax=[a(1,1);a(1,1);a(1,1);a(:,1)];
 ay=[a(1,2);a(1,2);a(1,2);a(:,2)];
 
+Data.time=tme;
+Data.x = x;
+Data.y = y;
+Data.vx = vx;
+Data.vy = vy;
+Data.ax = ax;
+Data.ay = ay;
 
 
 

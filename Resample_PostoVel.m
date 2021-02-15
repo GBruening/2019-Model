@@ -10,6 +10,7 @@ cd(main_fold);
 if ~exist('MT')
     cd([main_fold 'data']);
 %     load('metmvt_data_gb.mat');
+    load('metmvt_data_dec2018es.mat');
     MT = MT1;
     Data_met = Data1;
     clear MT1 Data1
@@ -152,9 +153,10 @@ for s = 7:-1:1
     end
 end
 cur_fold = pwd;
-cd('d:\Users\Gary\Desktop\Model Testing\Data');
+cd('D:\Users\Gary\Google Drive\Muscle modeling\Min_jerk_files\Data');
 save('Resamp_data_gb.mat','Resamp');
 cd(cur_fold);
+
 % 1;
 % %%
 % clear
@@ -231,7 +233,7 @@ cd(cur_fold);
 %     end
 % end
 % speeds = {'VVVF','VVF','VF','F','M','S','VS'};
-% % legend(speeds,Colors)
+% legend(speeds,Colors)
 % 
 % clear P V
 % for s = 1:6

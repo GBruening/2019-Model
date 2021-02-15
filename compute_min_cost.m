@@ -171,13 +171,22 @@ end
     end
     if ii < length(shoulder.torque)
         for k=1:length(muscle_nums)
-            [ min1(ii,k) , max1(ii,k) ] = find_minmax_state( act.(muscle_nums{k})(ii) , time_step );            
-            [ T ] = Fl_Fv_for(muscles.(muscle_nums{k}).norm_length(ii+1)...
-                ,muscles.(muscle_nums{k}).v(ii+1),min1(ii,k));            
-            stress_min(ii,k) = T * norm_force;            
-            [ T ] = Fl_Fv_for(muscles.(muscle_nums{k}).norm_length(ii+1)...
-                ,muscles.(muscle_nums{k}).v(ii+1),max1(ii,k));            
-            stress_max(ii,k) = T * norm_force;
+            [ min1(ii,k) , max1(ii,k) ] = find_minmax_state( act.(muscle_nums{k})(ii) , time_step );
+            T_min=inf;
+            T_max=0;
+            for test_act = linspace(min1(ii,k),max1(ii,k),100)
+%                 [ T ] = Fl_Fv_for(muscles.(muscle_nums{k}).norm_length(ii+1)...
+%                     ,muscles.(muscle_nums{k}).v(ii+1),min1(ii,k));
+                T_temp = Fl_Fv_for(muscles.(muscle_nums{k}).norm_length(ii+1)...
+                    ,muscles.(muscle_nums{k}).v(ii+1),test_act);
+                [ T_min ] = min(T_temp,T_min);
+                [ T_max ] = max(T_temp,T_max);
+            end
+            stress_min(ii,k) = T_min * norm_force;            
+%             [ T ] = Fl_Fv_for(muscles.(muscle_nums{k}).norm_length(ii+1)...
+%                 ,muscles.(muscle_nums{k}).v(ii+1),max1(ii,k));
+            stress_max(ii,k) = T_max * norm_force;
+            
         end
     end
 end

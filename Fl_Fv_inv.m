@@ -4,6 +4,9 @@ function [ a ] = Fl_Fv_inv( l , v , F )
 
 %     Fp1 = 68.35*0.0495*log(exp((l-1.445)/(0.0495))+1);
     Fp2 = -0.02*exp(13.8-18.7*l);
+    if Fp2>0
+        Fp2 = 0;
+    end
     
     if v <= 0
         Fv = (-5.72-v)/(-5.72+(1.38+2.09*l)*v);
@@ -21,12 +24,16 @@ function [ a ] = Fl_Fv_inv( l , v , F )
         fprintf('A is greater than 1 in FL_FV properties\n');
         A = 1;
     elseif A < 0
-        fprintf('A in the FL_FV properties is <0\n');
+%         fprintf('A in the FL_FV properties is <0\n');
 %         A = 0;
     end
     
     a = .56*Nf*10^(log10(-log(1-A))/Nf);
     if isinf(a)
+        1;
+    end
+    if a <0
+        fprintf("a less than 0");
         1;
     end
         

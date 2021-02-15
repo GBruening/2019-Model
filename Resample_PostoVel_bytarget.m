@@ -46,9 +46,10 @@ for c=1:nc
                 continue
             end
             popts.totaltrials = size(Data_met{c,subj,s}.x,2);
+            % Get Target Numbers
             for i=1:popts.totaltrials
                 x1 = 0.070710725027900; x2 = -0.070710537390700; y1 = 0.070710818846400; y2 = -0.070710631209400;
-                if i > 1 && Data_met{c,subj,s}.targetposition_act(i) == 0
+                if i > 1 && Data_met{c,subj,s}.targetposition_act(i,1) == 0
                     Data_met{c,subj,s}.targetnumber(i) = Data_met{c,subj,s}.targetnumber(i-1)+4;
                 else
                     if abs(Data_met{c,subj,s}.targetposition_act(i,2)-y1)<.00001
@@ -67,15 +68,18 @@ for c=1:nc
                 end
             end
             tr_count = 1;
+            % Set where to start
             if isfield(Data_met{c,subj,s},'trials_starthere')
                 start_trial = Data_met{c,subj,s}.trials_starthere(2);
             else
                 start_trial = 1;
             end
             for i=start_trial:popts.totaltrials
+                    % Skip if bad trial
                     if max(Data_met{c,subj,s}.p(:,i))<.095
                         continue
                     end
+                    % Flip vx/vy to absolute
                     switch Data_met{c,subj,s}.targetnumber(i)
                         case 1
 
@@ -98,6 +102,7 @@ for c=1:nc
                     if Data_met{c,subj,s}.p(10,i) >= .05
                         Data_met{c,subj,s}.p(:,i) = (Data_met{c,subj,s}.p(:,i)*-1)+.1;
                     end
+                    % Set endpoint
                     idxend = MT{c,subj,s}.idxendpt(i);
                     tar = Data_met{c,subj,s}.targetnumber(i);
                     for k=1:n_samp
@@ -110,6 +115,9 @@ for c=1:nc
                             index = MT{c,subj,s}.idxonset(i);
                         end
                         
+                        ResampleDataX(c,subj,s,tar,tr_count2,k) = Data_met{c,subj,s}.x(index,i);
+                        ResampleDataY(c,subj,s,tar,tr_count2,k) = Data_met{c,subj,s}.y(index,i);
+                                                
                         ResampleDataP(c,subj,s,tar,tr_count2,k) = abs(Data_met{c,subj,s}.p(index,i));
                         ResampleDataV(c,subj,s,tar,tr_count2,k) = abs(Data_met{c,subj,s}.v(index,i));
                         ResampleDataT(c,subj,s,tar,tr_count2,k) = abs(Data_met{c,subj,s}.time(index,i))-...
@@ -131,8 +139,8 @@ for c=1:nc
     end
 end
 
-cd('d:\Users\Gary\Desktop\Model Testing\Data');
-% cd('D:\Documents\Google Drive\Muscle modeling\Min_jerk files\Data');
+% cd('d:\Users\Gary\Desktop\Model Testing\Data');
+cd('D:\Users\Gary\Google Drive\Muscle modeling\Min_jerk_files\Data');
 % cd('E:\Documents\Google Drive\Muscle modeling\Min_jerk files\Data');
 % load('aa_stress2cost_03-22-2018.mat');  
 
@@ -145,49 +153,72 @@ for s = 1:7
             end
             for tar = 1:8
                 k = 1;
+                Resamp.X(c,subj,s,tar,k) = nanmean((ResampleDataX(c,subj,s,tar,:,k)));
+                Resamp.Y(c,subj,s,tar,k) = nanmean((ResampleDataY(c,subj,s,tar,:,k)));
+                
                 Resamp.P(c,subj,s,tar,k) = nanmean((ResampleDataP(c,subj,s,tar,:,k)));
                 Resamp.V(c,subj,s,tar,k) = nanmean((ResampleDataV(c,subj,s,tar,:,k)));
                 Resamp.T(c,subj,s,tar,k) = nanmean((ResampleDataT(c,subj,s,tar,:,k)));
+                
+                Resamp.X_e(c,subj,s,tar,k) = nanstd((ResampleDataX(c,subj,s,tar,:,k)));
+                Resamp.Y_e(c,subj,s,tar,k) = nanstd((ResampleDataY(c,subj,s,tar,:,k)));
+                
                 Resamp.P_e(c,subj,s,tar,k) = nanstd((ResampleDataP(c,subj,s,tar,:,k)));
                 Resamp.V_e(c,subj,s,tar,k) = nanstd((ResampleDataV(c,subj,s,tar,:,k)));
                 Resamp.T_e(c,subj,s,tar,k) = nanstd((ResampleDataT(c,subj,s,tar,:,k)));
                 for k = 2:n_samp
+                    Resamp.X(c,subj,s,tar,k) = nanmean(nonzeros(ResampleDataX(c,subj,s,tar,:,k)));
+                    Resamp.Y(c,subj,s,tar,k) = nanmean(nonzeros(ResampleDataY(c,subj,s,tar,:,k)));
+                    
                     Resamp.P(c,subj,s,tar,k) = nanmean(nonzeros(ResampleDataP(c,subj,s,tar,:,k)));
                     Resamp.V(c,subj,s,tar,k) = nanmean(nonzeros(ResampleDataV(c,subj,s,tar,:,k)));
                     Resamp.T(c,subj,s,tar,k) = nanmean(nonzeros(ResampleDataT(c,subj,s,tar,:,k)));
+                    
+                    Resamp.X_e(c,subj,s,tar,k) = nanstd(nonzeros(ResampleDataX(c,subj,s,tar,:,k)));
+                    Resamp.Y_e(c,subj,s,tar,k) = nanstd(nonzeros(ResampleDataY(c,subj,s,tar,:,k)));
+                    
                     Resamp.P_e(c,subj,s,tar,k) = nanstd(nonzeros(ResampleDataP(c,subj,s,tar,:,k)));
                     Resamp.V_e(c,subj,s,tar,k) = nanstd(nonzeros(ResampleDataV(c,subj,s,tar,:,k)));
                     Resamp.T_e(c,subj,s,tar,k) = nanstd(nonzeros(ResampleDataT(c,subj,s,tar,:,k)));
                 end
 %                 k = n_samp+1;
-% Comment the next stuff out to remove the end buffer of 0
-% movement
-                count = 1;
-                points = [10:5:30,31:50];
-                for temp=points
-                    k = n_samp+count;
-                    add_time = 0.05*temp;
-                    Resamp.P(c,subj,s,tar,k) = nanmean(nonzeros(ResampleDataP(c,subj,s,tar,:,100)));
-                    Resamp.V(c,subj,s,tar,k) = nanmean(nonzeros(ResampleDataV(c,subj,s,tar,:,100)));
-                    Resamp.T(c,subj,s,tar,k) = nanmean(nonzeros(ResampleDataT(c,subj,s,tar,:,100)))+add_time;
-                    Resamp.P_e(c,subj,s,tar,k) = nanstd(nonzeros(ResampleDataP(c,subj,s,tar,:,100)));
-                    Resamp.V_e(c,subj,s,tar,k) = nanstd(nonzeros(ResampleDataV(c,subj,s,tar,:,100)));
-                    Resamp.T_e(c,subj,s,tar,k) = nanstd(nonzeros(ResampleDataT(c,subj,s,tar,:,100)));
-                    count = count + 1;
-                end
+%                 % Comment the next stuff out to remove the end buffer of 0
+%                 % movement
+%                 count = 1;
+% %                 points = [10:5:30,31:50];
+%                 points = [5:10];
+%                 for temp=points
+%                     k = n_samp+count;
+%                     add_time = 0.05*temp;
+%                     Resamp.X(c,subj,s,tar,k) = nanmean(nonzeros(ResampleDataX(c,subj,s,tar,:,100)));
+%                     Resamp.Y(c,subj,s,tar,k) = nanmean(nonzeros(ResampleDataY(c,subj,s,tar,:,100)));
+%                     
+%                     Resamp.P(c,subj,s,tar,k) = nanmean(nonzeros(ResampleDataP(c,subj,s,tar,:,100)));
+%                     Resamp.V(c,subj,s,tar,k) = nanmean(nonzeros(ResampleDataV(c,subj,s,tar,:,100)));
+%                     Resamp.T(c,subj,s,tar,k) = nanmean(nonzeros(ResampleDataT(c,subj,s,tar,:,100)))+add_time;
+%                     
+%                     Resamp.X_e(c,subj,s,tar,k) = nanstd(nonzeros(ResampleDataX(c,subj,s,tar,:,100)));
+%                     Resamp.Y_e(c,subj,s,tar,k) = nanstd(nonzeros(ResampleDataY(c,subj,s,tar,:,100)));
+%                     
+%                     Resamp.P_e(c,subj,s,tar,k) = nanstd(nonzeros(ResampleDataP(c,subj,s,tar,:,100)));
+%                     Resamp.V_e(c,subj,s,tar,k) = nanstd(nonzeros(ResampleDataV(c,subj,s,tar,:,100)));
+%                     Resamp.T_e(c,subj,s,tar,k) = nanstd(nonzeros(ResampleDataT(c,subj,s,tar,:,100)));
+%                     count = count + 1;
+%                 end
                 
                 Resamp.Endt(c,subj,s,tar) = nanmean(nonzeros(end_time(c,subj,s,tar,:)));
             end
         end
     end
 end
-cur_fold = pwd;
-cd('d:\Users\Gary\Desktop\Model Testing\Data');
-save('Resamp_data_gb2.mat','Resamp');
-cd('d:\Users\Gary\Desktop\Model Testing');
-save('Resamp_data_gb2.mat','Resamp');
-cd(cur_fold);
+% cur_fold = pwd;
+% cd('d:\Users\Gary\Desktop\Model Testing\Data');
+% save('Resamp_data_gb2.mat','Resamp');
+% cd('d:\Users\Gary\Desktop\Model Testing');
+save('Resamp_data_Nov2020_nobuff.mat','Resamp');
+% cd(cur_fold);
 1;
+
 % 1;
 % %%
 % clear

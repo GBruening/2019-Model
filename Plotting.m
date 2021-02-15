@@ -23,17 +23,17 @@ for c = 1:4
                 continue
             end
             usum=0;
+            usum2=0;
             for t=1:n_tar
                 for k = 1:length(muscle_nums)
                     sum(abs(u{c,subj,s,t}.(muscle_nums{k}).^expo))*(time_step/10);
                     usum =  usum + sum(abs(u{c,subj,s,t}.(muscle_nums{k}).^expo))*(time_step)*muscles{c,subj,s,t}.(muscle_nums{k}).m;
+                    usum2 =  usum2 + sum(abs(u{c,subj,s,t}.(muscle_nums{k}).^2))*(time_step)*muscles{c,subj,s,t}.(muscle_nums{k}).m;
     %                 fprintf('YOU DIDN"T FIX THE DRIVE TIME STEP INTEGRAL DUMBO');
-                    if ~isreal(usum)
-                        1;
-                    end
                 end
             end
             usum1(c,subj,s) = usum/vars{c,subj,s,t}.speeds(s)/n_tar;
+            usum_sq(c,subj,s) = usum2/vars{c,subj,s,t}.speeds(s)/n_tar;
             ColorPref(c) = plot(vars{c,subj,s,t}.speeds(s),usum1(c,subj,s)/vars{c,subj,s,t}.speeds(s)/n_tar,...
                 'o','Color',ColorSet(c,:),'MarkerFaceColor',ColorSet(c,:));
         end
@@ -43,7 +43,7 @@ end
 legend([ColorPref(:)],mass_legend);
 xlabel('Movement Duration');ylabel(sprintf('Neural Drive Dot^%g',expo));
 
-drawnow;pause(.1);
+drawnow;
 
 % cd('C:\Users\garrick\SkyDrive\Muscle modeling\Min_jerk files\Graphs');
 % figure(1);savefig('Neural Dirve');
@@ -92,18 +92,18 @@ for c = 1:4
                 continue
             end
             asum=0;
+            asum2=0;
             for t=1:n_tar
                 for k = 1:length(muscle_nums)
                     ind = act{c,subj,s,t}.(muscle_nums{k})>1E-9;
                     if sum(ind)>0
                         asum =  asum + sum(act{c,subj,s,t}.(muscle_nums{k})(ind).^expo)*time_step;
-                    end
-                    if ~isreal(asum)
-                        1;
+                        asum2 =  asum2 + sum(act{c,subj,s,t}.(muscle_nums{k})(ind).^2)*time_step;
                     end
                 end
             end
             asum1(c,subj,s) = asum/vars{c,subj,s,t}.speeds(s)/n_tar;
+            asum_sq(c,subj,s) = asum2/vars{c,subj,s,t}.speeds(s)/n_tar;
             ColorPref(c) = plot(vars{c,subj,s,t}.speeds(s),asum/vars{c,subj,s,t}.speeds(s)/n_tar,...
                 'o','Color',ColorSet(c,:),'MarkerFaceColor',ColorSet(c,:));
         end
@@ -125,12 +125,15 @@ for c = 1:4
                 continue
             end
             fsum=0;
+            fsum2=0;
             for t=1:n_tar
                 for k = 1:length(muscle_nums)
-                    fsum =  fsum + sum(muscles{c,subj,s,t}.(muscle_nums{k}).force.^expo)*time_step;
+                    fsum = fsum + sum(muscles{c,subj,s,t}.(muscle_nums{k}).force.^expo)*time_step;
+                    fsum2 = fsum2 + sum(muscles{c,subj,s,t}.(muscle_nums{k}).force.^2)*time_step;
                 end
             end
             fsum1(c,subj,s) = fsum/(vars{c,subj,s,t}.speeds(s)/n_tar);
+            fsum_sq(c,subj,s) = fsum2/(vars{c,subj,s,t}.speeds(s)/n_tar);
             ColorPref(c) = plot(vars{c,subj,s,t}.speeds(s),fsum/vars{c,subj,s,t}.speeds(s)/n_tar,...
                 'o','Color',ColorSet(c,:),'MarkerFaceColor',ColorSet(c,:));
         end
@@ -155,6 +158,7 @@ for c = 1:4
                 continue
             end
             f_out = 0;
+            f_out2 = 0;
             for t=1:n_tar
                 fx_1 = -sin(theta{c,subj,s,t}.S).*...
                     shoulder{c,subj,s,t}.torque/...
@@ -171,8 +175,10 @@ for c = 1:4
                 fx_2 = sum(fx_2)*0.0025;
                 fy_2 = sum(fy_2)*0.0025;
                 f_out = f_out + sqrt(fx_2.^2+fy_2.^2);
+                f_out2 = f_out2 + sqrt(fx_2.^2+fy_2.^2).^2;
             end
             f_out1(c,subj,s) = f_out/(vars{c,subj,s,t}.speeds(s)/n_tar);
+            f_out_sq(c,subj,s) = f_out2/(vars{c,subj,s,t}.speeds(s)/n_tar);
             ColorPref(c) = plot(vars{c,subj,s,t}.speeds(s),f_out/vars{c,subj,s,t}.speeds(s)/n_tar,...
                 'o','Color',ColorSet(c,:),'MarkerFaceColor',ColorSet(c,:));
         end
@@ -195,14 +201,17 @@ for c = 1:4
         for s = 1:7
             if isempty(vars{c,subj,s,t})
                 continue
-            end     
-            ssum=0; 
+            end
+            ssum=0;
+            ssum2=0;
             for t=1:4
                 for k = 1:length(muscle_nums)
                     ssum =  ssum + sum(muscles{c,subj,s,t}.(muscle_nums{k}).force/muscles{c,subj,s,t}.(muscle_nums{k}).pcsa)*time_step;
+                    ssum2 =  ssum2 + (sum(muscles{c,subj,s,t}.(muscle_nums{k}).force/muscles{c,subj,s,t}.(muscle_nums{k}).pcsa).^2)*time_step;
                 end
             end
             ssum1(c,subj,s) = ssum/vars{c,subj,s,t}.speeds(s)/n_tar;
+            ssum_sq(c,subj,s) = ssum2/vars{c,subj,s,t}.speeds(s)/n_tar;
 %             ColorPref(c) = plot(vars{c,subj,s,t}.speeds(s),ssum/vars{c,subj,s,t}.speeds(s),'o','Color',ColorSet(c,:),'MarkerFaceColor',ColorSet(c,:));
         end
     end
@@ -224,13 +233,16 @@ for c = 1:4
             if isempty(vars{c,subj,s,t})
                 continue
             end
-        
             tsum=0;
+            tsum2=0;
             for t=1:n_tar
-                tsum =  tsum + (sum(abs(elbow{c,subj,s,t}.torque.^expo))...
+                tsum = tsum + (sum(abs(elbow{c,subj,s,t}.torque.^expo))...
                     +sum(abs(shoulder{c,subj,s,t}.torque.^expo)))*time_step;
+                tsum2 = tsum2 + (sum(abs(elbow{c,subj,s,t}.torque.^2))...
+                    +sum(abs(shoulder{c,subj,s,t}.torque.^2)))*time_step;
             end
             tsum1(c,subj,s) = tsum/vars{c,subj,s,t}.speeds(s)/n_tar;
+            tsum_sq(c,subj,s) = tsum2/vars{c,subj,s,t}.speeds(s)/n_tar;
             ColorPref(c) = plot(vars{c,subj,s,t}.speeds(s),...
                 tsum/vars{c,subj,s,t}.speeds(s)/n_tar,'o','Color',ColorSet(c,:),...
                 'MarkerFaceColor',ColorSet(c,:));
@@ -253,15 +265,18 @@ for c = 1:4
                 continue
             end
             bsum=0;
+            bsum2=0;
             for t=1:n_tar
                 for k = 1:length(muscle_nums)
                     for p1 = 1:3
-                        bsum =  bsum + sum(energy{c,subj,s,t}.(muscle_nums{k}).(energies{p1}).^expo);%*time_step;
+                        bsum = bsum + sum(energy{c,subj,s,t}.(muscle_nums{k}).(energies{p1}).^expo);%*time_step;
+                        bsum2 = bsum2 + sum(energy{c,subj,s,t}.(muscle_nums{k}).(energies{p1}).^2);%*time_step;
                     end
                 end
                 bsum;
             end
             bsum1(c,subj,s) = bsum/vars{c,subj,s,t}.speeds(s)/n_tar;
+            bsum_sq(c,subj,s) = bsum2/vars{c,subj,s,t}.speeds(s)/n_tar;
             ColorPref(c) = plot(vars{c,subj,s,t}.speeds(s),bsum/vars{c,subj,s,t}.speeds(s)/n_tar,...
                 'o','Color',ColorSet(c,:),'MarkerFaceColor',ColorSet(c,:));
         end
@@ -273,7 +288,210 @@ legend([ColorPref(:)],mass_legend);
 xlabel('Movement Duration');ylabel(sprintf('Umberger Model Dot^%g',expo));
             
 drawnow;
-pause(5);
+%% Uchida
+figure(45);clf(45); hold on;
+% subplot(2,2,3);hold on;
+energies = {'h_SL','h_AM','w'};
+for c = 1:4
+    for subj = 1:8
+        for s = 1:7
+            if isempty(vars{c,subj,s,t})
+                continue
+            end
+            uch_sum=0;
+            uch_sum2=0;
+            for t=1:n_tar
+                for k = 1:length(muscle_nums)
+                    for p1 = 1:length(energies)
+                        uch_sum = uch_sum + sum(uch{c,subj,s,t}.(muscle_nums{k}).(energies{p1}).^expo);%*time_step;
+                        uch_sum2 = uch_sum2 + sum(uch{c,subj,s,t}.(muscle_nums{k}).(energies{p1}).^2);%*time_step;
+                    end
+                end
+                bsum;
+            end
+            uch_sum1(c,subj,s) = uch_sum/vars{c,subj,s,t}.speeds(s)/n_tar;
+            uch_sum_sq(c,subj,s) = uch_sum2/vars{c,subj,s,t}.speeds(s)/n_tar;
+            ColorPref(c) = plot(vars{c,subj,s,t}.speeds(s),uch_sum/vars{c,subj,s,t}.speeds(s)/n_tar,...
+                'o','Color',ColorSet(c,:),'MarkerFaceColor',ColorSet(c,:));
+        end
+    end
+%     plot(vars{c,subj,s,t}.speeds,bsum1(c,:),'k-');
+end
+
+legend([ColorPref(:)],mass_legend);
+xlabel('Movement Duration');ylabel(sprintf('Uchida Model Dot^%g',expo));
+            
+drawnow;
+
+%% Bhargava
+figure(46);clf(46); hold on;
+% subplot(2,2,3);hold on;
+energies = {'a_dot','m_dot','s_dot','w_dot'};
+for c = 1:4
+    for subj = 1:8
+        for s = 1:7
+            if isempty(vars{c,subj,s,t})
+                continue
+            end
+            bhar_sum=0;
+            bhar_sum2=0;
+            for t=1:n_tar
+                for k = 1:length(muscle_nums)
+                    for p1 = 1:length(energies)
+                        bhar_sum = bhar_sum + sum(bhar{c,subj,s,t}.(muscle_nums{k}).(energies{p1}).^expo);%*time_step;
+                        bhar_sum2 = bhar_sum2 + sum(bhar{c,subj,s,t}.(muscle_nums{k}).(energies{p1}).^2);%*time_step;
+                    end
+                end
+                bsum;
+            end
+            bhar_sum1(c,subj,s) = bhar_sum/vars{c,subj,s,t}.speeds(s)/n_tar;
+            bhar_sum_sq(c,subj,s) = bhar_sum2/vars{c,subj,s,t}.speeds(s)/n_tar;
+            ColorPref(c) = plot(vars{c,subj,s,t}.speeds(s),bhar_sum/vars{c,subj,s,t}.speeds(s)/n_tar,...
+                'o','Color',ColorSet(c,:),'MarkerFaceColor',ColorSet(c,:));
+        end
+    end
+%     plot(vars{c,subj,s,t}.speeds,bsum1(c,:),'k-');
+end
+
+legend([ColorPref(:)],mass_legend);
+xlabel('Movement Duration');ylabel(sprintf('Bhargava Model Dot^%g',expo));
+            
+drawnow;
+
+
+%% Lichtwark
+figure(47);clf(47); hold on;
+% subplot(2,2,3);hold on;
+energies = {'m_dot','l_dot','s_dot','t_dot'};
+for c = 1:4
+    for subj = 1:8
+        for s = 1:7
+            if isempty(vars{c,subj,s,t})
+                continue
+            end
+            lich_sum=0;
+            lich_sum2=0;
+            for t=1:n_tar
+                for k = 1:length(muscle_nums)
+                    for p1 = 1:length(energies)
+                        lich_sum = lich_sum + sum(lich{c,subj,s,t}.(muscle_nums{k}).(energies{p1}).^expo);%*time_step;
+                        lich_sum2 = lich_sum2 + sum(lich{c,subj,s,t}.(muscle_nums{k}).(energies{p1}).^2);%*time_step;
+                    end
+                end
+            end
+            lich_sum1(c,subj,s) = lich_sum/vars{c,subj,s,t}.speeds(s)/n_tar;
+            lich_sum_sq(c,subj,s) = bhar_sum2/vars{c,subj,s,t}.speeds(s)/n_tar;
+            ColorPref(c) = plot(vars{c,subj,s,t}.speeds(s),...
+                lich_sum/vars{c,subj,s,t}.speeds(s)/n_tar,...
+                'o','Color',ColorSet(c,:),'MarkerFaceColor',ColorSet(c,:));
+        end
+    end
+%     plot(vars{c,subj,s,t}.speeds,bsum1(c,:),'k-');
+end
+legend([ColorPref(:)],mass_legend);
+xlabel('Movement Duration');ylabel(sprintf('Lichtwark Model Dot^%g',expo));         
+drawnow;
+
+%% Margaria
+figure(48);clf(48); hold on;
+% subplot(2,2,3);hold on;
+energies = {'p_dot'};
+for c = 1:4
+    for subj = 1:8
+        for s = 1:7
+            if isempty(vars{c,subj,s,t})
+                continue
+            end
+            marg_sum=0;
+            marg_sum2=0;
+            for t=1:n_tar
+                for k = 1:length(muscle_nums)
+                    for p1 = 1:1
+                        marg_sum = marg_sum + sum(marg{c,subj,s,t}.(muscle_nums{k}).(energies{p1}).^expo);%*time_step;
+                        marg_sum2 = marg_sum2 + sum(marg{c,subj,s,t}.(muscle_nums{k}).(energies{p1}).^2);%*time_step;
+                    end
+                end
+            end
+            marg_sum1(c,subj,s) = marg_sum/vars{c,subj,s,t}.speeds(s)/n_tar;
+            marg_sum_sq(c,subj,s) = marg_sum2/vars{c,subj,s,t}.speeds(s)/n_tar;
+            ColorPref(c) = plot(vars{c,subj,s,t}.speeds(s),...
+                marg_sum/vars{c,subj,s,t}.speeds(s)/n_tar,...
+                'o','Color',ColorSet(c,:),'MarkerFaceColor',ColorSet(c,:));
+        end
+    end
+%     plot(vars{c,subj,s,t}.speeds,bsum1(c,:),'k-');
+end
+legend([ColorPref(:)],mass_legend);
+xlabel('Movement Duration');ylabel(sprintf('Margaria Model Dot^%g',expo));         
+drawnow;
+
+%% Minetti
+figure(49);clf(49); hold on;
+% subplot(2,2,3);hold on;
+energies = {'total'};
+for c = 1:4
+    for subj = 1:8
+        for s = 1:7
+            if isempty(vars{c,subj,s,t})
+                continue
+            end
+            mine_sum=0;
+            mine_sum2=0;
+            for t=1:n_tar
+                for k = 1:length(muscle_nums)
+                    for p1 = 1:1
+                        mine_sum = mine_sum + sum(mine{c,subj,s,t}.(muscle_nums{k}).(energies{p1}).^expo);%*time_step;
+                        mine_sum2 = mine_sum2 + sum(mine{c,subj,s,t}.(muscle_nums{k}).(energies{p1}).^2);%*time_step;
+                    end
+                end
+            end
+            mine_sum1(c,subj,s) = mine_sum/vars{c,subj,s,t}.speeds(s)/n_tar;
+            mine_sum_sq(c,subj,s) = mine_sum2/vars{c,subj,s,t}.speeds(s)/n_tar;
+            ColorPref(c) = plot(vars{c,subj,s,t}.speeds(s),...
+                mine_sum/vars{c,subj,s,t}.speeds(s)/n_tar,...
+                'o','Color',ColorSet(c,:),'MarkerFaceColor',ColorSet(c,:));
+        end
+    end
+%     plot(vars{c,subj,s,t}.speeds,bsum1(c,:),'k-');
+end
+legend([ColorPref(:)],mass_legend);
+xlabel('Movement Duration');ylabel(sprintf('Minetti Model Dot^%g',expo));         
+drawnow;
+
+%% Houdjick
+figure(50);clf(50); hold on;
+% subplot(2,2,3);hold on;
+energies = {'total'};
+for c = 1:4
+    for subj = 1:8
+        for s = 1:7
+            if isempty(vars{c,subj,s,t})
+                continue
+            end
+            houd_sum=0;
+            houd_sum2=0;
+            for t=1:n_tar
+                for k = 1:length(muscle_nums)
+                    for p1 = 1:1
+                        houd_sum = houd_sum + sum(houd{c,subj,s,t}.(muscle_nums{k}).(energies{p1}).^expo);%*time_step;
+                        houd_sum2 = houd_sum2 + sum(houd{c,subj,s,t}.(muscle_nums{k}).(energies{p1}).^2);%*time_step;
+                    end
+                end
+            end
+            houd_sum1(c,subj,s) = houd_sum/vars{c,subj,s,t}.speeds(s)/n_tar;
+            houd_sum_sq(c,subj,s) = houd_sum2/vars{c,subj,s,t}.speeds(s)/n_tar;
+            ColorPref(c) = plot(vars{c,subj,s,t}.speeds(s),...
+                houd_sum/vars{c,subj,s,t}.speeds(s)/n_tar,...
+                'o','Color',ColorSet(c,:),'MarkerFaceColor',ColorSet(c,:));
+        end
+    end
+%     plot(vars{c,subj,s,t}.speeds,bsum1(c,:),'k-');
+end
+legend([ColorPref(:)],mass_legend);
+xlabel('Movement Duration');ylabel(sprintf('Houd Model Dot^%g',expo));         
+drawnow;
+
+
 %% Writing Data
 
 mp_data = readtable('met_power_data.csv');
@@ -323,7 +541,12 @@ for c=1:4
             A={c,subj,s,movedur(c,subj,s),met_data(c,subj,s),k1,...
                 tsum1(c,subj,s),f_out1(c,subj,s),fsum1(c,subj,s),...
                 ssum1(c,subj,s),asum1(c,subj,s),usum1(c,subj,s),...
-                bsum1(c,subj,s)};
+                tsum_sq(c,subj,s),f_out_sq(c,subj,s),fsum_sq(c,subj,s),...
+                ssum_sq(c,subj,s),asum_sq(c,subj,s),usum_sq(c,subj,s),...
+                bsum1(c,subj,s), uch_sum1(c,subj,s), bhar_sum1(c,subj,s),...
+                lich_sum1(c,subj,s), marg_sum1(c,subj,s),...
+                mine_sum1(c,subj,s), houd_sum1(c,subj,s)...
+                };
             dlmwrite(excel_file,A,'-append');
         end
     end
