@@ -704,6 +704,12 @@ for (minfunc1 in minparams){#c('actstate2')){
     minfuncnum_abcd=c(minfuncnum_abcd,minfunc_count)
     vars_abcd = c(vars_abcd,varfit_count)
     vars_abcd_labs = c(vars_abcd_labs,var)
+    
+    
+    eval(parse(text = paste('fun.fit1[[var]] <- function(t) ',afit,'+',bfit,'*(2.47^',cfit,')/(t^',dfit,')',sep='')))
+    eval(parse(text = paste('fun.fit2[[var]] <- function(t) ',afit,'+',bfit,'*(4.73^',cfit,')/(t^',dfit,')',sep='')))
+    eval(parse(text = paste('fun.fit3[[var]] <- function(t) ',afit,'+',bfit,'*(6.99^',cfit,')/(t^',dfit,')',sep='')))
+    eval(parse(text = paste('fun.fit4[[var]] <- function(t) ',afit,'+',bfit,'*(11.50^',cfit,')/(t^',dfit,')',sep='')))
 
     # a_val = c(a_val,modelsum_lintransform$coefficients[1])
     # a_ste = c(a_ste,modelsum_lintransform$coefficients[5])
@@ -731,13 +737,13 @@ for (minfunc1 in minparams){#c('actstate2')){
                                  aes(x=movedur,
                                      y=lintransform,
                                      color=factor(c)))+
-        geom_point(data = tempdata,
-                   aes(x=movedur,
-                       y=mpowernet,
-                       fill=factor(c)),
-                   shape=21,
-                   color='black',
-                   size=3)+
+        # geom_point(data = tempdata,
+        #            aes(x=movedur,
+        #                y=mpowernet,
+        #                fill=factor(c)),
+        #            shape=21,
+        #            color='black',
+        #            size=3)+
         # geom_point(data = tempdata,
         #            aes(x=movedur,
         #                y=lintransform,
@@ -745,6 +751,13 @@ for (minfunc1 in minparams){#c('actstate2')){
         #            shape=21,
         #            color='black',
         #            size=3)+
+      geom_point(data = tempdata,
+                 aes(x=movedur,
+                     y=unfitted,
+                     fill=factor(c)),
+                 shape=21,
+                 color='black',
+                 size=3)+
         scale_fill_manual(values = mass_colors)+
         stat_function(fun=fun.fit1[[var]],size=1.5,color=mass_colors[1])+#, linetype="dashed")+
         stat_function(fun=fun.fit2[[var]],size=1.5,color=mass_colors[2])+#, linetype="dashed")+ 
@@ -756,15 +769,16 @@ for (minfunc1 in minparams){#c('actstate2')){
              x='Movement Duration (s)',
              fill='Effective\nMass (kg)',
              title = paste('Fitting',fitting_labs2[varfit_count],'\n Min',min_labs2[minfunc_count],', R^2=',rsq_val))+
-        ylim(low=0,high=200)+
+        ylim(low=0,high=max(tempdata$unfitted))+
         annotate('text',
                  label = fitted_eq_str,
                  x=1,
-                 y=150,
+                 y=max(tempdata$unfitted)*.8,#150,
                  vjust=0,
                  parse=TRUE,
                  size=4,
                  family= theme_get()$text[["family"]])
+      # asdfasdfjkl;asdfl;jkfdsa
       
     }
   }
@@ -1212,8 +1226,11 @@ fitting_labs = c(TeX('Torque (Nm)'),
 
 if (do_linfit_plots){
   choose_vars = c(1,2,5,6,9,10,11,12,13,14,15,16,17)#,18,19)
+  # choose_vars = c(14,13,15,17,16,1,2,5,6,9,10,11,12)#,18,19)
+  
   filt_rsq = filter(rsq_frame, variable %in% choose_vars)
   filt_rsq$var_num = rep(1:length(choose_vars),max(filt_rsq$minfunc_num))
+  filt_rsq$var_num = match(filt_rsq$variable,choose_vars)
   RSQ_bar <- ggplot(filt_rsq,
                     aes(fill=factor(minfunc_num),
                         x=var_num,
@@ -1229,7 +1246,7 @@ if (do_linfit_plots){
               size = 1)+
     # theme_classic(base_family='Times')+
     theme(axis.text.x = element_text(angle = 30, hjust = 1),
-          legend.position = c(.15,.8),
+          legend.position = c(.5,.8),
           legend.background = element_blank(),
           legend.title = element_text(size=10),
           legend.text = element_text(size=7),
@@ -1242,11 +1259,12 @@ if (do_linfit_plots){
     guides(fill=guide_legend(title="Minimization\nFunction"))+
     scale_fill_manual(labels = parse(text = min_labs), 
                       values = brewer.pal(9,"Spectral"))+
-    coord_cartesian(ylim = c(min(rsq_frame$rsquared)*.98,max(rsq_frame$rsquared)*1.02))
+    coord_cartesian(ylim = c(min(rsq_frame$rsquared)*.98,max(rsq_frame$rsquared)*1.02))#+geom_vline(xintercept=5.5,size=1)
   
   setwd(paste(parent_fold,graph_folder,sep=''))
   if (save_plots){
-    ggsave('Rsq_matrix_expo1.pdf',plot = RSQ_bar,useDingbats = FALSE,width=7,height=4.5,units='in')
+    # ggsave('Rsq_matrix_expo1_reorder.pdf',plot = RSQ_bar,useDingbats = FALSE,width=7,height=4.5,units='in')
+    ggsave('Rsq_matrix_expo1_reorder.pdf',plot = RSQ_bar,useDingbats = FALSE,width=7,height=4.5,units='in')
   }
   
   rsq_frame$variable = factor(rsq_frame$variable,
@@ -1297,12 +1315,13 @@ if (do_linfit_plots){
          # title = parse(text = min_labs[best_min_func_num]))+
          title = eval(parse(text = min_labs2[best_min_func_num])))+
     scale_fill_manual(values = brewer.pal(9,"Spectral")[best_min_func_num])+
-    coord_cartesian(ylim = c(min(rsq_frame_filt$rsquared)*.98,max(rsq_frame_filt$rsquared)*1.02))
+    coord_cartesian(ylim = c(min(rsq_frame_filt$rsquared)*.98,max(rsq_frame_filt$rsquared)*1.02))#+geom_vline(xintercept=5.5,size=1)
   
   setwd(paste(parent_fold,graph_folder,sep=''))
   
   if (save_plots){
     ggsave('Rsq_matrix_expo1_act2.pdf',plot = RSQ_bestmin, useDingbats = FALSE,width=7,height=4.5,units='in')
+    # ggsave('Rsq_matrix_expo1_act2_reorder.pdf',plot = RSQ_bestmin, useDingbats = FALSE,width=7,height=4.5,units='in')
   }
   
   rsq_frame_filt$variable = factor(rsq_frame_filt$variable,
@@ -2259,8 +2278,8 @@ if (save_plots){
 
 fits_all <- plot_grid(
   plot_grid(fit_plots[['metabolics']],
-            umber_bestmin_fit,
             bhar_bestmin_fit,
+            umber_bestmin_fit,
             uch_bestmin_fit,
             lich_bestmin_fit,
             marg_bestmin_fit,
@@ -2420,15 +2439,55 @@ for (minfunc1 in minparams){
   colnames(slope_table[[minfunc1]]) = c('RMCorr-Rsq','RMCorr-LB','RMCorr-uB','RMCorr-Slope','RSQ','RSQ-LB','RSQ-UB','Slope','Slope-LB','Slope-UB','Slope','Slope-SE')
 }
 
+parameter_frame$a_val_lb = parameter_frame$a_val-1.96*parameter_frame$a_ste
+parameter_frame$a_val_ub = parameter_frame$a_val+1.96*parameter_frame$a_ste
 
+parameter_frame$b_val_lb = parameter_frame$b_val-1.96*parameter_frame$b_ste
+parameter_frame$b_val_ub = parameter_frame$b_val+1.96*parameter_frame$b_ste
+
+parameter_frame$c_val_lb = parameter_frame$c_val-1.96*parameter_frame$c_ste
+parameter_frame$c_val_ub = parameter_frame$c_val+1.96*parameter_frame$c_ste
+
+parameter_frame$d_val_lb = parameter_frame$d_val-1.96*parameter_frame$d_ste
+parameter_frame$d_val_ub = parameter_frame$d_val+1.96*parameter_frame$d_ste
 # #=================== Compare RNG ==============================
 # # Comparing Between RNG and Non RNG
 # sumdata$rng = 0
 # sumdata_rng$rng = 1
 # rng_data = rbind(sumdata,sumdata_rng)
+vars = c('sumbhar','sumumber','sumuch','sumlich','summarg','sumtorque','sumtorque2','sumforcemus','sumforcemus2','sumactstate','sumactstate2','sumdrive','sumdrive2')
+vars_labs = c('Bhargava','Umberger','Uchida','Lichtwark','Margaria','Torque','Torque$^2$','Muscle Force','Muscle Force$^2$','Active State','Active State$^2$','Neural Drive','Neural Drive$^2$')
 
-
-
+k = 0
+param_strings = list()
+for (item in vars){
+  k = k + 1
+  var_lab = vars_labs[k]
+  row_data = filter(parameter_frame,minfunc == 'actstate2', var_lab == item)
+  
+  astring = paste(formatC(row_data$a_val,digits = 3, format = 'g'),'$pm$',
+                  formatC(row_data$a_ste,digits = 3, format = 'g'),' (',
+                  formatC(row_data$a_val_lb,digits = 3, format = 'g'),'-',
+                  formatC(row_data$a_val_ub,digits = 3, format = 'g'),')',sep='')
+  
+  bstring = paste(formatC(row_data$b_val,digits = 3, format = 'g'),'$pm$',
+                  formatC(row_data$b_ste,digits = 3, format = 'g'),' (',
+                  formatC(row_data$b_val_lb,digits = 3, format = 'g'),'-',
+                  formatC(row_data$b_val_ub,digits = 3, format = 'g'),')',sep='')
+  
+  cstring = paste(formatC(row_data$c_val,digits = 3, format = 'g'),'$pm$',
+                  formatC(row_data$c_ste,digits = 3, format = 'g'),' (',
+                  formatC(row_data$c_val_lb,digits = 3, format = 'g'),'-',
+                  formatC(row_data$c_val_ub,digits = 3, format = 'g'),')',sep='')
+  
+  dstring = paste(formatC(row_data$d_val,digits = 3, format = 'g'),'$pm$',
+                  formatC(row_data$d_ste,digits = 3, format = 'g'),' (',
+                  formatC(row_data$d_val_lb,digits = 3, format = 'g'),'-',
+                  formatC(row_data$d_val_ub,digits = 3, format = 'g'),')',sep='')
+  param_strings[['ab']][[item]] = paste(astring,' & ',bstring,' \\')
+  
+  param_strings[['cd']][[item]] = paste(cstring,' & ',dstring,' \\')
+}
 # ctrl<-trainControl(method = 'cv',number = 10)
 # lmCVFit <- train(mpowernet~.,data=testdata,method='lm',trControl=ctrl,metric="Rsquared")
 # 
