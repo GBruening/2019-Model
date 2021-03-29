@@ -1,5 +1,7 @@
 # Data analysis scripts for paper
 
+License - CC0 Universal
+
 Resample trajectory data used to simulate movements is stored in Resamp_data_Nov2020.
  - This is aggregated data from a previous study, code can be found [here](https://github.com/GBruening/Met_mass_r).
  
