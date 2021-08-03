@@ -1,24 +1,34 @@
-library(ggplot2)
-#library(ggforce)
-library(ggthemes)
-library(lmtest)
-library(tidyr)
-library(dplyr)
-library(multcomp)
-library(lme4)
-library(knitr)
-library(grid)
-library(gridExtra)
-library("RColorBrewer")
-library(wesanderson)
-library(extrafont)
-library(cowplot)
-library(latex2exp)
-library(caret)
-library(ggfortify)
-library(ggResidpanel)
-# library(readr)
-library(rmcorr)
+packages <- c('ggplot2','ggthemes','lmtest','tidyr','dplyr','multcomp','lme4',
+              'knitr','grid','gridExtra','RColorBrewer','wesanderson','extrafont',
+              'cowplot','latex2exp','caret','ggfortify','ggResidpanel','rmcorr',
+              'psychometric','ggridges','here')
+installed_packages <- packages %in% rownames(installed.packages())
+if (any(installed_packages == FALSE)) {
+  install.packages(packages[!installed_packages])
+}
+invisible(lapply(packages, library, character.only = TRUE))
+
+# library(ggplot2)
+# #library(ggforce)
+# library(ggthemes)
+# library(lmtest)
+# library(tidyr)
+# library(dplyr)
+# library(multcomp)
+# library(lme4)
+# library(knitr)
+# library(grid)
+# library(gridExtra)
+# library("RColorBrewer")
+# library(wesanderson)
+# library(extrafont)
+# library(cowplot)
+# library(latex2exp)
+# library(caret)
+# library(ggfortify)
+# library(ggResidpanel)
+# # library(readr)
+# library(rmcorr)
 
 # loadfonts(device='win')
 windowsFonts(Times=windowsFont("TT Times New Roman"))
@@ -48,60 +58,26 @@ filter_data = 0
 # Do Plots? ------------------
 do_linfit_plots = 1
 do_param_errbar_plots = 1
-do_groupparam_plots = 0
+do_groupparam_plots = 1
 do_diag_plots = 0
 
 #Load Data------------------
-# Using NeuromechVR
-if (dir.exists('D:/Users/Gary/Google Drive/Muscle modeling/Metabolics/Data')){
-  # If Neuromech VR folder exists
-  parent_fold = ('D:/Users/Gary/Google Drive/Muscle modeling/Min_jerk_files')
-  eff_masses_meta <- read.csv('D:/Users/Gary/Google Drive/Muscle modeling/Metabolics/Data/eff_masses.csv',header=0)
-} else if (dir.exists('C:/Users/Gary/Google Drive/Muscle modeling/Metabolics/Data/')){
-  # If laptop folder exists
-  parent_fold = ('C:/Users/Gary/Google Drive/Muscle modeling/Metabolics/Data')
-  eff_masses_meta <- read.csv('C:/Users/Gary/Google Drive/Muscle modeling/Metabolics/Lappy Data/eff_masses.csv',header=0)
-} else if (dir.exists('D:/Google Drive/Muscle modeling/Min_jerk_files')){
-  # If Desky folder exists
-  parent_fold = ('D:/Google Drive/Muscle modeling/Min_jerk_files')
-  eff_masses_meta <- read.csv('D:/Google Drive/Muscle modeling/Metabolics/Lappy Data/eff_masses.csv',header=0)
-} else {
-  print('Didn\'t find either folder')
-}
-mpdata <-read.csv(paste(parent_fold,'/../metabolics/data/met_power_data.csv',sep=''))
-sumdata <-read.csv(paste(parent_fold,'/Data/Data_11-11-2020.csv',sep=''))
-
-sumdata_buff <-read.csv(paste(parent_fold,'/2020 Data/Data_11-11-2020_buff.csv',sep=''))
-sumdata_nobuff <-read.csv(paste(parent_fold,'/2020 Data/Data_11-11-2020_nobuff.csv',sep=''))
-sumdata_mj <-read.csv(paste(parent_fold,'/2020 Data/Data_11-11-2020_mj.csv',sep=''))
+parent_fold = here()
+eff_masses_meta <- read.csv('eff_masses.csv',header=0)
+mpdata <-read.csv(paste(parent_fold,'/met_power_data.csv',sep=''))
+sumdata <-read.csv(paste(parent_fold,'/Data_05-15-2021_sized.csv',sep=''))
 
 if (filter_data){
   graph_folder = '/graphs_filt/'
   sumdata <- subset(sumdata, mpowernet<max(sumdata$mpowernet)*.99)
 } else {
-  graph_folder = '/Graphs/'
+  graph_folder = '/Graphs - Sized/'
 }
-sumdata_rng <-read.csv(paste(parent_fold,'/Data/Data_5-9-2019_rng.csv',sep=''))
-
 
 # Add squared vars ##############
 values <- c('stress','stress2','force','force2','actstate','actstate2','drive','drive2','umberger','uch','bhar','lich','marg')
 index <- c(1,2,3,4,5,6,7,8,9)
 sumdata$minfunc <- values[match(sumdata$minfunc,index)]
-
-# sumdata$sumtorque2 = sumdata$sumtorque^2
-# sumdata$sumforceout2 = sumdata$sumforceout^2
-# sumdata$sumforcemus2 = sumdata$sumforcemus^2
-# sumdata$sumstress2 = sumdata$sumstress^2
-# sumdata$sumactstate2 = sumdata$sumactstate^2
-# sumdata$sumdrive2 = sumdata$sumdrive^2
-
-sumdata_rng$sumtorque2 = sumdata_rng$sumtorque^2
-sumdata_rng$sumforceout2 = sumdata_rng$sumforceout^2
-sumdata_rng$sumforcemus2 = sumdata_rng$sumforcemus^2
-sumdata_rng$sumstress2 = sumdata_rng$sumstress^2
-sumdata_rng$sumactstate2 = sumdata_rng$sumactstate^2
-sumdata_rng$sumdrive2 = sumdata_rng$sumdrive^2
 
 # Add effmass2  ==============================
 # Adding Column for estimated eff_mass to met data experiment.
@@ -113,12 +89,9 @@ eff_mass = numeric(length(sumdata$subj))
 for (i in 1:length(sumdata$subj)){
   eff_mass[i] = eff_masses_meta[match(sumdata$c[i],index),match(sumdata$subj[i],subjects)]
 }
-
 sumdata$effmass <- eff_mass
-# sumdata_rng$effmass <- eff_mass
 
-eff_masses_meta <- read.csv(paste(parent_fold,'/Data/eff_masses_meta.csv',sep=''),header=0)
-
+eff_masses_meta <- read.csv(paste(parent_fold,'/eff_masses_meta.csv',sep=''),header=0)
 # Adding Column for estimated eff_mass to preferred experiment.
 index <- unique(mpdata$effmass)
 eff_mass = numeric(length(mpdata$subj))
@@ -141,6 +114,11 @@ mass_colors <- c(rgb(color1[1],color1[2],color1[3]),
                  rgb(color2[1],color2[2],color2[3]),
                  rgb(color3[1],color3[2],color3[3]),
                  rgb(color4[1],color4[2],color4[3]))
+
+gg_color_hue <- function(n) {
+  hues = seq(15, 375, length = n + 1)
+  hcl(h = hues, l = 65, c = 100)[1:n]
+}
 
 lm_eqn <- function(lin){
   # m <- lm(y ~ x, df);
@@ -199,6 +177,12 @@ minparams = c('stress',
 
 fitting_vars = c('sumtorque',
                  'sumtorque2',
+                 'sumtorquerate',
+                 'sumtorquerate2',
+                 'sumwork',
+                 'sumwork2',
+                 'sumworkrate',
+                 'sumworkrate2',
                  'sumforceout',
                  'sumforceout2',
                  'sumforcemus',
@@ -219,6 +203,12 @@ fitting_vars = c('sumtorque',
 
 fitting_labs = c('Sum of Torque (Nm)',
                  'Sum of Torque^2 (Nm)^2',
+                 'Sum of Torque Rate (Nm/s)',
+                 'Sum of Torque Rate^2 (Nm/s)^2',
+                 'Sum of Work (J)',
+                 'Sum of Work^2 (J)^2',
+                 'Sum of Work Rate (J/s)',
+                 'Sum of Work Rate^2 (J/s)^2',
                  'Sum of Output Force (N)',
                  'Sum of Output Force^2 (N^2)',
                  'Sum of Muscle Force (N)',
@@ -249,6 +239,12 @@ min_labs2 = c(('Stress (N/m^2)'),
 
 fitting_labs2 = c(('Torque (Nm)'),
                   ('Torque^2 (Nm)^2'),
+                  ('Torque Rate (Nm/s)'),
+                  ('Torque Rate^2 (Nm/s)^2'),
+                  ('Sum of Work (J)'),
+                  ('Sum of Work^2 (J)^2'),
+                  ('Sum of Work Rate (J/s)'),
+                  ('Sum of Work Rate^2 (J/s)^2'),
                   ('Output Force (N)'),
                   ('Output Force^2 (N)'),
                   ('Muscle Force (N)'),
@@ -320,8 +316,8 @@ rsq_matrix = matrix(,nrow=length(minparams),ncol=length(fitting_labs))
 expo=1
 minfunc_count = 0
 
-# fitting_vars = fitting_vars[3]
-for (minfunc1 in minparams){#c('actstate2')){
+for (minfunc1 in minparams){
+# for (minfunc1 in c('drive')){
 # for (minfunc1 in c('actstate2')){
   
   minfunc_count = minfunc_count + 1
@@ -337,7 +333,7 @@ for (minfunc1 in minparams){#c('actstate2')){
     
     rmcorrelation[[minfunc1]][[var]] = eval(parse(text = paste('rmcorr(subj,',var,',mpowernet,plotdata)',sep='')))
     eval(parse(text = paste('rmcorr_',minfunc1,'_',var,'<-rmcorrelation[[minfunc1]][[var]]',sep='')))
-    
+
     # print(paste('plot_',minfunc1,'_',var,sep=''))
     int = eval(parse(text = paste('fit_',minfunc1,'_',var,'$coefficients[1]',sep='')))
     slope = eval(parse(text = paste('fit_',minfunc1,'_',var,'$coefficients[2]',sep='')))
@@ -559,6 +555,7 @@ for (minfunc1 in minparams){#c('actstate2')){
       
         # Save histogram plots
         setwd(paste(parent_fold,graph_folder,'resid_plots/',minfunc1,sep=''))
+        
         string = paste('daig_min',minfunc1,'_',var,sep='')
         filename = paste(string,'.pdf',sep='')
         if (do_diag_plots){
@@ -660,10 +657,10 @@ for (minfunc1 in minparams){#c('actstate2')){
       eval(parse(text = paste('fun.fit3[[var]] <- function(t) ',int,'+',slope,'*(',afit,'+',bfit,'*(6.99^',cfit,')/(t^',dfit,'))',sep='')))
       eval(parse(text = paste('fun.fit4[[var]] <- function(t) ',int,'+',slope,'*(',afit,'+',bfit,'*(11.50^',cfit,')/(t^',dfit,'))',sep='')))
     # } else {
-    #   eval(parse(text = paste('fun.fit1[[var]] <- function(t) ',afit,'+',bfit,'*(2.47^',cfit,')/(t^',dfit,')',sep='')))
-    #   eval(parse(text = paste('fun.fit2[[var]] <- function(t) ',afit,'+',bfit,'*(4.73^',cfit,')/(t^',dfit,')',sep='')))
-    #   eval(parse(text = paste('fun.fit3[[var]] <- function(t) ',afit,'+',bfit,'*(6.99^',cfit,')/(t^',dfit,')',sep='')))
-    #   eval(parse(text = paste('fun.fit4[[var]] <- function(t) ',afit,'+',bfit,'*(11.50^',cfit,')/(t^',dfit,')',sep='')))
+      # eval(parse(text = paste('fun.fit1[[var]] <- function(t) ',afit,'+',bfit,'*(2.47^',cfit,')/(t^',dfit,')',sep='')))
+      # eval(parse(text = paste('fun.fit2[[var]] <- function(t) ',afit,'+',bfit,'*(4.73^',cfit,')/(t^',dfit,')',sep='')))
+      # eval(parse(text = paste('fun.fit3[[var]] <- function(t) ',afit,'+',bfit,'*(6.99^',cfit,')/(t^',dfit,')',sep='')))
+      # eval(parse(text = paste('fun.fit4[[var]] <- function(t) ',afit,'+',bfit,'*(11.50^',cfit,')/(t^',dfit,')',sep='')))
     # }
     
     fun.1 <- function(t) a+b*(2.47^c)/(t^d)
@@ -705,11 +702,6 @@ for (minfunc1 in minparams){#c('actstate2')){
     vars_abcd = c(vars_abcd,varfit_count)
     vars_abcd_labs = c(vars_abcd_labs,var)
     
-    
-    eval(parse(text = paste('fun.fit1[[var]] <- function(t) ',afit,'+',bfit,'*(2.47^',cfit,')/(t^',dfit,')',sep='')))
-    eval(parse(text = paste('fun.fit2[[var]] <- function(t) ',afit,'+',bfit,'*(4.73^',cfit,')/(t^',dfit,')',sep='')))
-    eval(parse(text = paste('fun.fit3[[var]] <- function(t) ',afit,'+',bfit,'*(6.99^',cfit,')/(t^',dfit,')',sep='')))
-    eval(parse(text = paste('fun.fit4[[var]] <- function(t) ',afit,'+',bfit,'*(11.50^',cfit,')/(t^',dfit,')',sep='')))
 
     # a_val = c(a_val,modelsum_lintransform$coefficients[1])
     # a_ste = c(a_ste,modelsum_lintransform$coefficients[5])
@@ -737,13 +729,13 @@ for (minfunc1 in minparams){#c('actstate2')){
                                  aes(x=movedur,
                                      y=lintransform,
                                      color=factor(c)))+
-        # geom_point(data = tempdata,
-        #            aes(x=movedur,
-        #                y=mpowernet,
-        #                fill=factor(c)),
-        #            shape=21,
-        #            color='black',
-        #            size=3)+
+        geom_point(data = tempdata,
+                   aes(x=movedur,
+                       y=mpowernet,
+                       fill=factor(c)),
+                   shape=21,
+                   color='black',
+                   size=3)+
         # geom_point(data = tempdata,
         #            aes(x=movedur,
         #                y=lintransform,
@@ -751,13 +743,13 @@ for (minfunc1 in minparams){#c('actstate2')){
         #            shape=21,
         #            color='black',
         #            size=3)+
-      geom_point(data = tempdata,
-                 aes(x=movedur,
-                     y=unfitted,
-                     fill=factor(c)),
-                 shape=21,
-                 color='black',
-                 size=3)+
+      # geom_point(data = tempdata,
+      #            aes(x=movedur,
+      #                y=unfitted,
+      #                fill=factor(c)),
+      #            shape=21,
+      #            color='black',
+      #            size=3)+
         scale_fill_manual(values = mass_colors)+
         stat_function(fun=fun.fit1[[var]],size=1.5,color=mass_colors[1])+#, linetype="dashed")+
         stat_function(fun=fun.fit2[[var]],size=1.5,color=mass_colors[2])+#, linetype="dashed")+ 
@@ -769,16 +761,17 @@ for (minfunc1 in minparams){#c('actstate2')){
              x='Movement Duration (s)',
              fill='Effective\nMass (kg)',
              title = paste('Fitting',fitting_labs2[varfit_count],'\n Min',min_labs2[minfunc_count],', R^2=',rsq_val))+
-        ylim(low=0,high=max(tempdata$unfitted))+
+        # ylim(low=0,high=max(tempdata$unfitted))+
+        ylim(low=0,high=200)+
         annotate('text',
                  label = fitted_eq_str,
                  x=1,
-                 y=max(tempdata$unfitted)*.8,#150,
+                 y=150,
+                 # y=max(tempdata$unfitted)*.8,#150,
                  vjust=0,
                  parse=TRUE,
                  size=4,
                  family= theme_get()$text[["family"]])
-      # asdfasdfjkl;asdfl;jkfdsa
       
     }
   }
@@ -801,13 +794,15 @@ for (minfunc1 in minparams){#c('actstate2')){
                            '<- lm(mpowernet ~ sumtorque + sumforceout + sumforcemus + sumstress + sumactstate + sumdrive,data=sumdata2)',
                            sep = '')))
   testlm2 <- lm(mpowernet ~ sumtorque + sumforceout + sumforcemus + sumstress + sumactstate + sumdrive,data=sumdata2)
-  
+  # summary(lm(mpowernet ~ sumtorque + sumforcemus + sumactstate + sumdrive + sumtorquerate + sumwork + sumworkrate,data=sumdata2))
   pred <- predict(testlm2, sumdata2)
   pred <- data.frame(pred = pred, mpowernet = sumdata2$mpowernet)
   
   lm_all_rsq = c(lm_all_rsq,summary(testlm2)$r.squared)
   lm_all_minfunc = c(lm_all_minfunc,minfunc_count)
-  summary(testlm2)$r.squared
+  # summary(testlm2)$adj.r.squared
+  # caret_data = sumdata2[c(5,7,8,9,10,12,14,15)]
+  # summary(lm(mpowernet ~. , data = caret_data))
   
   lm_all_pred[[minfunc1]] <- ggplot(data = pred)+
     geom_smooth(aes(x=pred,y=mpowernet),method='lm')+
@@ -1116,27 +1111,6 @@ for (minfunc1 in minparams){#c('actstate2')){
       string = paste('ggsave(filename,plot=fittedvar1_',minfunc1,',useDingbats = FALSE,width=16,height=12,units=\'in\')',sep='')
       eval(parse(text=string))
     }
-    
-    # # Fitted Plot Raised to the 2nd
-    # string = paste('fittedvar2_',minfunc1,
-    #                '=plot_grid(fitplot_sumtorque2,
-    #                fitplot_sumstress2,
-    #                fitplot_sumforcemus2,
-    #                fitplot_sumactstate2,
-    #                fitplot_sumdrive2,
-    #                align = \'vh\',
-    #                labels = c(\'A\',\'B\',\'C\',\'D\',\'E\'),
-    #                hjust=-1,
-    #                nrow=2)',sep='')
-    # eval(parse(text=string))
-    # add_legend <- get_legend(fitplot_sumstress+theme(legend.position='right'))
-    # eval(parse(text = paste('fittedvar2_',minfunc1,'<-plot_grid(fittedvar2_',minfunc1,',add_legend,ncol=2,rel_widths=c(.85,.15))',sep='')))
-    # 
-    # setwd('C:/Users/Gary/Google Drive/2019 Model/Graphs/fitted_var2')
-    # string = paste('fittedvar2_',minfunc1,sep='')
-    # filename = paste(string,'.pdf',sep='')
-    # string = paste('ggsave(filename,plot=fittedvar2_',minfunc1,',useDingbats = FALSE,width=14,height=9,units=\'in\')',sep='')
-    # eval(parse(text=string))
   }
   
 }
@@ -1152,10 +1126,6 @@ rsq_frame = data.frame(minfunc = minfuncs_rsq,
 setwd(parent_fold)
 write.csv(rsq_frame,'rsq_frame.csv')
 
-# rsq_frame$variable = as.numeric(rsq_frame$variable)
-# rsq_frame <- rsq_frame[order(rsq_frame$variable),]
-# rownames(rsq_frame) = NULL
-
 min_labs = c(TeX('Stress $(N/m^2)$'),
              TeX('$Stress^2$ $(N/m^2)^2$'),
              TeX('Force $(N)$'),
@@ -1165,15 +1135,6 @@ min_labs = c(TeX('Stress $(N/m^2)$'),
              TeX('Neural Drive'),
              TeX('Neural $Drive^2$'),
              TeX('Umberger Model $(W)$'))
-# min_labs2 = c('bquote(\'Minimizing Stress (N /\'~m^2~\')\')',
-#               'bquote(\'Minimizing \'~Stress^2~\'(N /\'~m^2\'~)^2\')',
-#               'bquote(\'Minimizing Force~(N)\')',
-#               'bquote(\'Minimizing Force\'^2 (N\'^2)\')',
-#               'bquote(\'Minimizing Active State\')',
-#               'bquote(\'Minimizing Active State\'^2)',
-#               'bquote(\'Minimizing Neural Drive\')',
-#               'bquote(\'Minimizing Neural Drive\'^2\')',
-#               'bquote(\'Minimizing Umberger Energy Model (W)\')')
 min_labs2 = c('bquote(\'Minimizing Stress\')',
               'bquote(\'Minimizing \'~Stress^2)',
               'bquote(\'Minimizing Force\')',
@@ -1204,28 +1165,35 @@ fitting_labs_split = c(TeX('Torque (Nm)'),
                        # TeX('Mine Model $(W)$'),
                        # TeX('Houd Model $(W)$'))
 
-fitting_labs = c(TeX('Torque (Nm)'),
+fitting_labs = c(TeX('Torque (Nm)'), # 1
                  TeX('$Torque^2$ $(Nm)^2$'),
+                 TeX('Torque Rate (Nm/s)'),
+                 TeX('$Torque Rate^2$ $(Nm/s)^2$'),
+                 TeX('Work (J)'), # 5
+                 TeX('$Work^2$ $J^2$'),
+                 TeX('Work Rate (J/s)'),
+                 TeX('$Work Rate^2$ $(J/s)^2$'),
                  TeX('Output Force $(N)$'),
-                 TeX('Output $Force^2$ $(N)$'),
+                 TeX('Output $Force^2$ $(N)$'), # 10
                  TeX('Muscle Force $(N)$'),
                  TeX('Muscle $Force^2$ $(N^2)$'),
                  TeX('Stress $(N/m^2)$'),
                  TeX('$Stress^2$ $(N/m^2)^2$'),
-                 TeX('Active State$'),
+                 TeX('Active State$'), # 15
                  TeX('Active $State^2$'),
                  TeX('Neural Drive'),
                  TeX('Neural $Drive^2$'),
                  TeX('Umberger Model $(W)$'),
-                 TeX('Bhar Model $(W)$'),
+                 TeX('Bhar Model $(W)$'), # 20
                  TeX('Uch Model $(W)$'),
                  TeX('Lich Model $(W)$'),
-                 TeX('Marg Model $(W)$'))#),
-                 # TeX('Mine Model $(W)$'),
-                 # TeX('Houd Model $(W)$'))
+                 TeX('Marg Model $(W)$'),
+                 TeX('Metabolics ($W$)'))
 
 if (do_linfit_plots){
+  
   choose_vars = c(1,2,5,6,9,10,11,12,13,14,15,16,17)#,18,19)
+  choose_vars = c(1,2,3,4,5,6,7,8,11,12,13,14,15,16,17,18,19,20,21,22,23)
   # choose_vars = c(14,13,15,17,16,1,2,5,6,9,10,11,12)#,18,19)
   
   filt_rsq = filter(rsq_frame, variable %in% choose_vars)
@@ -1267,31 +1235,35 @@ if (do_linfit_plots){
     ggsave('Rsq_matrix_expo1_reorder.pdf',plot = RSQ_bar,useDingbats = FALSE,width=7,height=4.5,units='in')
   }
   
-  rsq_frame$variable = factor(rsq_frame$variable,
-                              levels = (1:17),
-                              labels = c(1,7,2,8,3,9,4,10,5,11,6,12,13,14,15,16,17))
   
-  RSQ_1to2 <- ggplot(rsq_frame,aes(fill=factor(minfunc_num),x=reorder(variable,variable),y=rsquared))+
-    geom_bar(position='dodge',stat='identity')+
+  RSQ_1to2 <- ggplot(rsq_frame,
+                     aes(fill=factor(minfunc_num),x=reorder(variable,variable),y=rsquared))+
+    geom_bar(position='dodge',
+             stat='identity')+
     theme_classic(base_family='Times')+
     theme(axis.text.x = element_text(angle = 45, hjust = 1))+#,axis.line = element_line(color='black',size = 1,linetype='solid'))+
-    scale_x_discrete(limits = (1:17), labels=parse(text=fitting_labs_split))+
+    scale_x_discrete(limits = (1:17), 
+                     labels=parse(text=fitting_labs_split))+
     labs(x='Fitted Variable',y='R Squared Value',fill=minparams)+
     guides(fill=guide_legend(title="Minimization\nFunction"))+
     scale_fill_manual(labels = parse(text = min_labs), values = colorRampPalette(brewer.pal(9,"Spectral"))(9))
-  rsq_frame$variable = factor(rsq_frame$variable,
-                              labels = (1:17),
-                              levels = c(1,7,2,8,3,9,4,10,5,11,6,12,13,14,15,16,17))
+  
+  # rsq_frame$variable = factor(rsq_frame$variable,
+  #                             labels = (1:17),
+  #                             levels = c(1,7,2,8,3,9,4,10,5,11,6,12,13,14,15,16,17))
+  
   setwd(paste(parent_fold,graph_folder,sep=''))
   if (save_plots){
     ggsave('Rsq_matrix_expo1_split.pdf',plot = RSQ_1to2, useDingbats = FALSE,width=7,height=4.5,units='in')
   }
+  rsq_frame$variable = as.numeric(rsq_frame$variable)
   
-  best_min_func = filter(rsq_frame,rsquared == (max(rsq_frame$rsquared)))$minfunc
-  best_min_func_num = filter(rsq_frame,rsquared == (max(rsq_frame$rsquared)))$minfunc_num
+  best_min_func = filter(rsq_frame,variable > 18,rsquared == (max(filter(rsq_frame,variable > 18)$rsquared)))$minfunc
+  best_min_func_num = filter(rsq_frame,variable > 18,rsquared == (max(filter(rsq_frame,variable > 18)$rsquared)))$minfunc_num
   
   rsq_frame_filt = filter(filt_rsq,minfunc==filter(rsq_frame,rsquared == (max(rsq_frame$rsquared)))$minfunc)
-  
+  rsq_frame_filt = filter(filt_rsq,minfunc==best_min_func)
+
   RSQ_bestmin <- ggplot(rsq_frame_filt,
                         aes(x=var_num,
                             y=rsquared))+
@@ -1315,7 +1287,10 @@ if (do_linfit_plots){
          # title = parse(text = min_labs[best_min_func_num]))+
          title = eval(parse(text = min_labs2[best_min_func_num])))+
     scale_fill_manual(values = brewer.pal(9,"Spectral")[best_min_func_num])+
-    coord_cartesian(ylim = c(min(rsq_frame_filt$rsquared)*.98,max(rsq_frame_filt$rsquared)*1.02))#+geom_vline(xintercept=5.5,size=1)
+    scale_y_continuous(breaks = c(0.35,0.40,.45,0.50,0.55,0.60,0.65))+
+    # coord_cartesian(ylim = c(min(rsq_frame_filt$rsquared)*.98,max(rsq_frame_filt$rsquared)*1.02))#+geom_vline(xintercept=5.5,size=1)
+    coord_cartesian(ylim = c(0.35,0.65))#+geom_vline(xintercept=5.5,size=1)
+
   
   setwd(paste(parent_fold,graph_folder,sep=''))
   
@@ -1518,7 +1493,6 @@ p_vals <- function(mu1,se1,mu2,se2,df){
   return(2*pt(-T,df=184))
 }
 
-# fitting_vars = fitting_vars[3]
 parameter_frame$a_pval = NA
 parameter_frame$b_pval = NA
 parameter_frame$c_pval = NA
@@ -1533,6 +1507,12 @@ parameter_frame$prox_or_model = NA
 f_temp = fitting_vars
 fitting_vars = c('sumtorque',
                  'sumtorque2',
+                 'sumtorquerate',
+                 'sumtorquerate2',
+                 'sumwork',
+                 'sumwork2',
+                 'sumworkrate',
+                 'sumworkrate2',
                  'sumforceout',
                  'sumforceout2',
                  'sumforcemus',
@@ -1578,9 +1558,9 @@ for (minfunc1 in minparams){
       
       parameter_frame[colSums(t(parameter_frame[,c("minfunc", "var_lab")]) == c(minfunc1,var))==2,paste(param,'_pval',sep='')] = param_p_val
       
-      if (varfit_count<12.5){
+      if (varfit_count<18.5){
         parameter_frame[colSums(t(parameter_frame[,c("minfunc", "var_lab")]) == c(minfunc1,var))==2,'prox_or_model'] = 1
-      } else if (varfit_count<17.5){
+      } else if (varfit_count<23.5){
         parameter_frame[colSums(t(parameter_frame[,c("minfunc", "var_lab")]) == c(minfunc1,var))==2,'prox_or_model'] = 2
       } else {
         parameter_frame[colSums(t(parameter_frame[,c("minfunc", "var_lab")]) == c(minfunc1,var))==2,'prox_or_model'] = 3
@@ -1632,44 +1612,57 @@ if (do_param_errbar_plots){
                 '$Neural Drive^2$',
                 '$Umberger Model (W)$')
   
-  fitting_vars = c('sumtorque',
+  fitting_vars = c('sumtorque', # 1
                    'sumtorque2',
+                   'sumtorquerate',
+                   'sumtorquerate2',
+                   'sumwork', # 5
+                   'sumwork2',
+                   'sumworkrate',
+                   'sumworkrate2',
                    'sumforceout',
-                   'sumforceout2',
+                   'sumforceout2', # 10
                    'sumforcemus',
                    'sumforcemus2',
                    'sumstress',
                    'sumstress2',
-                   'sumactstate',
+                   'sumactstate', # 15
                    'sumactstate2',
                    'sumdrive',
                    'sumdrive2',
                    'sumumber',
-                   'sumbhar',
+                   'sumbhar', # 20
                    'sumuch',
                    'sumlich',
                    'summarg',
                    'Metabolics')
-  fitting_labs = c(TeX('Torque (Nm)'),
+  fitting_labs = c(TeX('Torque (Nm)'), # 1
                    TeX('$Torque^2$ $(Nm)^2$'),
+                   TeX('Torque Rate (Nm/s)'),
+                   TeX('$Torque Rate^2$ $(Nm/s)^2$'),
+                   TeX('Work (J)'), # 5
+                   TeX('$Work^2$ $J^2$'),
+                   TeX('Work Rate (J/s)'),
+                   TeX('$Work Rate^2$ $(J/s)^2$'),
                    TeX('Output Force $(N)$'),
-                   TeX('Output $Force^2$ $(N)$'),
+                   TeX('Output $Force^2$ $(N)$'), # 10
                    TeX('Muscle Force $(N)$'),
                    TeX('Muscle $Force^2$ $(N^2)$'),
                    TeX('Stress $(N/m^2)$'),
                    TeX('$Stress^2$ $(N/m^2)^2$'),
-                   TeX('Active State$'),
+                   TeX('Active State$'), # 15
                    TeX('Active $State^2$'),
                    TeX('Neural Drive'),
                    TeX('Neural $Drive^2$'),
                    TeX('Umberger Model $(W)$'),
-                   TeX('Bhar Model $(W)$'),
+                   TeX('Bhar Model $(W)$'), # 20
                    TeX('Uch Model $(W)$'),
                    TeX('Lich Model $(W)$'),
                    TeX('Marg Model $(W)$'),
                    TeX('Metabolics ($W$)'))
   
-  util_param_select = c(1,2,5,6,9,10,11,12,13,14,15,16,17,18)
+  # util_param_select = c(1,2,5,6,9,10,11,12,13,14,15,16,17,18)
+  util_param_select = c(1,2,3,4,5,6,7,8,11,12,15,16,17,18,19,20,21,22,23,24)
   fitting_vars = fitting_vars[util_param_select]
   fitting_labs = fitting_labs[util_param_select]
   parameter_frame2 = filter(parameter_frame,var_lab %in% fitting_vars)
@@ -1694,6 +1687,7 @@ if (do_param_errbar_plots){
       rm(g)
       temp_pframe = filter(parameter_frame2,minfunc==eval(minfunc1))
       temp_pframe$var2 = 1:length(temp_pframe$variable)
+      # temp_pframe$var2 = c(6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,2,3,3,4,5,1)
       
       string = paste('g=ggplot(temp_pframe,
                                aes(x=factor(variable),
@@ -1713,16 +1707,18 @@ if (do_param_errbar_plots){
                   ymin=yminval,
                   ymax=ymaxval,
                   alpha=.01,
-                  color = '#56B4E9')+
+                  # color = '#56B4E9')+
+                  color = 'gray')+
         scale_x_discrete(labels=parse(text=fitting_labs))+
         labs(x='Effort Variable',title=eval(param),y=eval(param),
              color="Representations")+
         # scale_color_manual(labels=parse(text=fitting_labs),
         #                    values = brewer.pal(12,'Set3'))+
         scale_color_manual(labels = c('Effort Model','Metabolic Model','Metabolic data'),
-                           values = c('#E69F00','#009E73','#56B4E9'))+
-        geom_vline(xintercept=8.5,size=1)+
-        geom_vline(xintercept=13.5,size=1)+
+                           # values = c('#E69F00','#009E73','#56B4E9'))+
+                           values = c('gray','black','black'))+
+        geom_vline(xintercept=14.5,size=1)+
+        geom_vline(xintercept=19.5,size=1)+
         theme_classic+
         theme(legend.position='none',
               axis.text.x = element_text(angle = 30, 
@@ -1763,7 +1759,8 @@ if (do_param_errbar_plots){
         # scale_fill_manual(labels=parse(text=fitting_labs),
         # values = brewer.pal(12,'Set3'))+
         scale_fill_manual(labels = c('Effort Model','Metabolic Model'),
-                          values = c('#E69F00','#009E73'))+
+                          # values = c('#E69F00','#009E73'))+
+                          values = c('grey','black'))+
         geom_vline(xintercept=8.5,size=1)+
         # theme_classic+
         theme(legend.position='none',
@@ -2015,45 +2012,59 @@ minparams = c('stress',
               'drive',
               'drive2',
               'umberger')
-fitting_vars = c('sumtorque',
-                 'sumforceout',
-                 'sumforcemus',
-                 'sumstress',
-                 'sumactstate',
-                 'sumdrive',
+fitting_vars = c('sumtorque', # 1
                  'sumtorque2',
-                 'sumforceout2',
+                 'sumtorquerate',
+                 'sumtorquerate2',
+                 'sumwork', # 5
+                 'sumwork2',
+                 'sumworkrate',
+                 'sumworkrate2',
+                 'sumforceout',
+                 'sumforceout2', # 10
+                 'sumforcemus',
                  'sumforcemus2',
+                 'sumstress',
                  'sumstress2',
+                 'sumactstate', # 15
                  'sumactstate2',
+                 'sumdrive',
                  'sumdrive2',
                  'sumumber',
-                 'sumbhar',
+                 'sumbhar', # 20
                  'sumuch',
                  'sumlich',
                  'summarg',
                  'Metabolics')
-fitting_labs = c(TeX('Torque (Nm)'),
+fitting_labs = c(TeX('Torque (Nm)'), # 1
                  TeX('$Torque^2$ $(Nm)^2$'),
+                 TeX('Torque Rate (Nm/s)'),
+                 TeX('$Torque Rate^2$ $(Nm/s)^2$'),
+                 TeX('Work (J)'), # 5
+                 TeX('$Work^2$ $J^2$'),
+                 TeX('Work Rate (J/s)'),
+                 TeX('$Work Rate^2$ $(J/s)^2$'),
                  TeX('Output Force $(N)$'),
-                 TeX('Output $Force^2$ $(N)$'),
+                 TeX('Output $Force^2$ $(N)$'), # 10
                  TeX('Muscle Force $(N)$'),
                  TeX('Muscle $Force^2$ $(N^2)$'),
                  TeX('Stress $(N/m^2)$'),
                  TeX('$Stress^2$ $(N/m^2)^2$'),
-                 TeX('Active State$'),
+                 TeX('Active State$'), # 15
                  TeX('Active $State^2$'),
                  TeX('Neural Drive'),
                  TeX('Neural $Drive^2$'),
-                 TeX('Umberger Model $(W)$'),
-                 TeX('Bhar Model $(W)$'),
-                 TeX('Uch Model $(W)$'),
-                 TeX('Lich Model $(W)$'),
-                 TeX('Marg Model $(W)$'),
+                 TeX('Umberger $(W)$'),
+                 TeX('Bhargava $(W)$'), # 20
+                 TeX('Uchida $(W)$'),
+                 TeX('Lichtwark $(W)$'),
+                 TeX('Margaria $(W)$'),
                  TeX('Metabolics ($W$)'))
+
 # Create the plots where every min func is on every plot
 if (do_groupparam_plots){
-  util_param_select = c(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18)
+  # util_param_select = c(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18)
+  util_param_select = c(1:24)
   fitting_vars = fitting_vars[util_param_select]
   fitting_labs = fitting_labs[util_param_select]
   temp_pframe = filter(parameter_frame,var_lab %in% fitting_vars)
@@ -2168,7 +2179,7 @@ if (save_plots){
 # best_min_func = filter(rsq_frame,rsquared == (max(rsq_frame$rsquared)))$minfunc
 # best_min_func_num = filter(rsq_frame,rsquared == (max(rsq_frame$rsquared)))$minfunc_num
 
-for (mod in c('umber','bhar','uch','lich','marg','torque2','actstate2','drive2')){
+for (mod in c('umber','bhar','uch','lich','marg','torque2','torquerate2','work','workrate','actstate2','drive2')){
   eval(parse(text = paste(mod,'_bestmin_lm  <- lmplot[[\'',best_min_func,'\']][[\'sum',mod,'\']]+
                                                theme(legend.position = \'none\')',sep = '')))
   eval(parse(text = paste(mod,'_bestmin_fit <- fit_plots_',best_min_func,'$sum',mod,sep='')))
@@ -2278,15 +2289,18 @@ if (save_plots){
 
 fits_all <- plot_grid(
   plot_grid(fit_plots[['metabolics']],
+            marg_bestmin_fit,
+            uch_bestmin_fit,
             bhar_bestmin_fit,
             umber_bestmin_fit,
-            uch_bestmin_fit,
             lich_bestmin_fit,
-            marg_bestmin_fit,
             torque2_bestmin_fit,
+            torquerate2_bestmin_fit,
+            work_bestmin_fit,
+            workrate_bestmin_fit,
             actstate2_bestmin_fit,
             drive2_bestmin_fit,
-            nrow = 3,
+            nrow = 4,
             align = 'vh',
             labels = 'AUTO'),
   legend_mass,
@@ -2295,7 +2309,7 @@ fits_all <- plot_grid(
 
 if (save_plots){
   setwd(paste(parent_fold,graph_folder,'Paper_graphs',sep=''))
-  ggsave('fits_all.pdf',plot = fits_all,useDingbats = FALSE,width=12,height=12,units='in')
+  ggsave('fits_all.pdf',plot = fits_all,useDingbats = FALSE,width=12,height=16,units='in')
 }
 
 ## Lm plots
@@ -2339,20 +2353,26 @@ eval(parse(text = paste('plots = lmplot[[\'',best_min_func,'\']]',sep='')))
 var_lm_paper = plot_grid(plot_grid(
                                    plots[['sumtorque']]+theme(legend.position = 'none'),
                                    plots[['sumtorque2']]+theme(legend.position = 'none'),
+                                   plots[['sumtorquerate']]+theme(legend.position = 'none'),
+                                   plots[['sumtorquerate2']]+theme(legend.position = 'none'),
+                                   plots[['sumwork']]+theme(legend.position = 'none'),
+                                   plots[['sumwork2']]+theme(legend.position = 'none'),
+                                   plots[['sumworkrate']]+theme(legend.position = 'none'),
+                                   plots[['sumworkrate2']]+theme(legend.position = 'none'),
                                    plots[['sumforcemus']]+theme(legend.position = 'none'),
                                    plots[['sumforcemus2']]+theme(legend.position = 'none'),
                                    plots[['sumactstate']]+theme(legend.position = 'none'),
                                    plots[['sumactstate2']]+theme(legend.position = 'none'),
                                    plots[['sumdrive']]+theme(legend.position = 'none'),
                                    plots[['sumdrive2']]+theme(legend.position = 'none'),
-                                   nrow=4,
+                                   ncol=4,
                                    labels='AUTO',
                                    align = 'vh'),
                           legend_mass,
                           rel_widths = c(.9,.1))
 if (save_plots){
   setwd(paste(parent_fold,graph_folder,'Paper_graphs',sep=''))
-  ggsave('var_lm.pdf',plot = var_lm_paper,useDingbats = FALSE,width=2*4,height=4*4,units='in')
+  ggsave('var_lm.pdf',plot = var_lm_paper,useDingbats = FALSE,width=16,height=16,units='in')
 }
 
 ## Other fits
@@ -2400,6 +2420,196 @@ if (save_plots){
   ggsave('paramplot.pdf',plot = save_param_plot,useDingbats = FALSE,height=(4.5*3)/.9,width=9,units='in')
 }
 
+# KDF plots
+kdf_labs = c(TeX('Torque (Nm)'), # 1
+             TeX('$Torque^2$ $(Nm)^2$'),
+             TeX('Torque Rate (Nm/s)'),
+             TeX('$Torque Rate^2$ $(Nm/s)^2$'),
+             TeX('Work (J)'), # 5
+             TeX('$Work^2$ $J^2$'),
+             TeX('Work Rate (J/s)'),
+             TeX('$Work Rate^2$ $(J/s)^2$'),
+             TeX('Output Force $(N)$'),
+             TeX('Output $Force^2$ $(N)$'), # 10
+             TeX('Muscle Force $(N)$'),
+             TeX('Muscle $Force^2$ $(N^2)$'),
+             TeX('Stress $(N/m^2)$'),
+             TeX('$Stress^2$ $(N/m^2)^2$'),
+             TeX('Active State$'), # 15
+             TeX('Active $State^2$'),
+             TeX('Neural Drive'),
+             TeX('Neural $Drive^2$'),
+             TeX('Umberger $(W)$'),
+             TeX('Bhargava $(W)$'), # 20
+             TeX('Uchida $(W)$'),
+             TeX('Lichtwark $(W)$'),
+             TeX('Margaria $(W)$'),
+             TeX('Metabolics ($W$)'))
+lab_choose = kdf_labs[c(24,23,21,20,19,22,seq(1,18))]
+
+tempdata = filter(sumdata,minfunc == best_min_func)
+densities = list()
+for (col_num in c(5,7:31)){
+  var_name = colnames(tempdata)[col_num]
+  tempdata[,col_num] = tempdata[,col_num] / max(tempdata[,col_num])
+  densities[[var_name]] = density(tempdata[,col_num], from = 0, to = 1)
+}
+tempdata <- gather(tempdata[,c(1,2,3,4,6,32,5,7:31)], variable, measurement, mpowernet:sumhoud)
+
+var_count = 1
+var_current = tempdata[1,'variable']
+tempdata$var_num = 0
+for (k in 1:length(tempdata$c)){
+  if (tempdata[k,'variable'] == var_current){
+    tempdata[k,'var_num'] = var_count
+  } else {
+    var_count = var_count + 1
+    tempdata[k,'var_num'] = var_count
+    var_current = tempdata[k,'variable']
+  }
+}
+index = c(1,24,22,21,20,23,2,11,3,12,4,13,5,14,6,15,7,16,8,17,9,18,10,19)
+values = c(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24)
+tempdata$var_num <- values[match(tempdata$var_num,index)]
+
+dens_diff = data.frame(x = c(),
+                       y = c(),
+                       variable = c(), 
+                       var_num = c())
+dens_diff_int = data.frame(variable = c(),
+                           int_value = c(),
+                           ks_value = c(),
+                           var_num = c())
+
+for (col_num in c(1:length(densities))){
+  dens_diff <- rbind(dens_diff,
+        data.frame(x = densities[[names(densities)[col_num]]]$x,
+                   y = densities[[names(densities)[col_num]]]$y-densities[['mpowernet']]$y,
+                   variable = rep(names(densities)[col_num],512),
+                   var_num = col_num))
+  
+  dens_diff_int <- rbind(dens_diff_int,
+                         data.frame(variable = names(densities)[col_num],
+                                    int_value = (1/512)*sum(abs(densities[[names(densities)[col_num]]]$y-densities[['mpowernet']]$y)),
+                                    ks_value = ks.test(densities[[names(densities)[col_num]]]$y,densities[['mpowernet']]$y)$p.value,
+                                    var_num = col_num))
+}
+dens_diff = filter(dens_diff, var_num <= 24)
+dens_diff_int = filter(dens_diff_int, var_num <= 24)
+
+index = c(1,24,22,21,20,23,2,11,3,12,4,13,5,14,6,15,7,16,8,17,9,18,10,19)
+values = c(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24)
+tempdata$var_num <- values[match(tempdata$var_num,index)]
+dens_diff$var_num <- values[match(dens_diff$var_num,index)]
+dens_diff_int$var_num <- values[match(dens_diff_int$var_num,index)]
+
+
+# kdf_choose_vars = seq(1,24)
+# kdf_choose_vars = c(1,2,3,4,5,6,8,9,11,13,21,22,23,24)
+kdf_choose_vars = c(seq(1,14),17,18,21,22,23,24)
+lab_choose = lab_choose[kdf_choose_vars]
+
+# dens_diff2 = filter(dens_diff,var_num %in% kdf_choose_vars)
+# index = c(24,22,21,20,23,2,11,12,5)
+# values = c(1,2,3,4,5,6,7,8,9)
+# dens_diff2$var_num <- values[match(dens_diff2$var_num,index)]
+# tempdata$var_num <- values[match(tempdata$var_num,index)]
+
+dens_diff_line <- ggplot(filter(dens_diff,var_num %in% kdf_choose_vars[-1]),
+       aes(x = x, 
+           y = y, 
+           color = factor(var_num)))+
+  geom_line(size = 1.5)+
+  scale_color_manual(values = gg_color_hue(length(kdf_choose_vars[-1])),
+                     labels=parse(text=lab_choose[-1]))+
+  labs(color = 'Model',
+       x = 'Normalized Estimate',
+       y = 'Kernal Density Difference from Metabolics')+
+  xlim(c(0,1))
+
+
+# kdf_ridges <- ggplot(filter(tempdata,variable %in% unique(dens_diff$variable)[c(1,kdf_choose_vars)]), 
+tempdata$var_num = (tempdata$var_num*-1)+25
+kdf_ridges <- ggplot(filter(tempdata,var_num %in% kdf_choose_vars),
+       aes(x = measurement, 
+           y = factor(var_num),
+           fill = factor(var_num)))+
+  geom_density_ridges(scale = 2)+
+  labs(color = 'Model',
+       x = 'Normalized Estimate',
+       y = 'Kernal Density Estimate')+
+  scale_y_discrete(labels=parse(text=rev(lab_choose)))+
+  # scale_y_discrete(limits = unique(rev(tempdata$var_num)),
+  #                  labels = aggregate(var_num ~ variable,tempdata, mean)[order(aggregate(var_num ~ variable,tempdata, mean)$var_num),]$variable)+
+  theme(axis.text.y = element_text(angle = 45, hjust = 1))
+
+  # scale_x_discrete(limits = 1:length(choose_vars), 
+  #                  labels=parse(text=fitting_labs[choose_vars]))+
+  
+dens_diff_bar <- ggplot(filter(dens_diff_int,var_num %in% kdf_choose_vars[-1]), 
+                        aes(x = factor(var_num), 
+                            fill = factor(var_num),
+                            y = int_value))+
+    geom_bar(stat = 'identity',
+             position = 'dodge')+
+    scale_x_discrete(labels=parse(text=lab_choose[-1]))+
+    theme(axis.text.x = element_text(angle = 30, hjust = 1),
+          legend.position = 'none')+
+    labs(x = 'Fitted Variable',
+         y = 'Integrated difference in KDF\nfunction from metabolics.')
+    
+
+dens_kstest_bar <- ggplot(filter(dens_diff_int,var_num %in% kdf_choose_vars[-1]), 
+                          aes(x = factor(var_num), 
+                              fill = factor(var_num),
+                              y = ks_value))+
+  geom_bar(stat = 'identity',
+           position = 'dodge')+
+  scale_x_discrete(labels=parse(text=lab_choose[-1]))+
+  theme(axis.text.x = element_text(angle = 30, hjust = 1),
+        legend.position = 'none')+
+  labs(x = 'Fitted Variable',
+       y = 'KS p-value test between\nvariable KDF and metabolic KDF.')
+
+kdf_plots<-plot_grid(plot_grid(kdf_ridges+theme(legend.position = 'none'), 
+                               dens_diff_line+theme(legend.position = 'none'), 
+                    dens_diff_bar, dens_kstest_bar,
+                    rel_heights = c(1.5,1),
+                    labels = 'AUTO'),
+          get_legend(dens_diff_line),
+          rel_widths = c(4,1))
+
+
+if (save_plots){
+  setwd(paste(parent_fold,graph_folder,'Paper_graphs',sep=''))
+  ggsave('kdf_tests.pdf',plot = kdf_plots+theme_cowplot(font_size=8),useDingbats = FALSE,height=12,width=12,units='in')
+}
+
+# fitting_labs = c(TeX('Torque (Nm)'), # 1
+#                  TeX('$Torque^2$ $(Nm)^2$'),
+#                  TeX('Torque Rate (Nm/s)'),
+#                  TeX('$Torque Rate^2$ $(Nm/s)^2$'),
+#                  TeX('Work (J)'), # 5
+#                  TeX('$Work^2$ $J^2$'),
+#                  TeX('Work Rate (J/s)'),
+#                  TeX('$Work Rate^2$ $(J/s)^2$'),
+#                  TeX('Output Force $(N)$'),
+#                  TeX('Output $Force^2$ $(N)$'), # 10
+#                  TeX('Muscle Force $(N)$'),
+#                  TeX('Muscle $Force^2$ $(N^2)$'),
+#                  TeX('Stress $(N/m^2)$'),
+#                  TeX('$Stress^2$ $(N/m^2)^2$'),
+#                  TeX('Active State$'), # 15
+#                  TeX('Active $State^2$'),
+#                  TeX('Neural Drive'),
+#                  TeX('Neural $Drive^2$'),
+#                  TeX('Umberger Model $(W)$'),
+#                  TeX('Bhar Model $(W)$'), # 20
+#                  TeX('Uch Model $(W)$'),
+#                  TeX('Lich Model $(W)$'),
+#                  TeX('Marg Model $(W)$'),
+#                  TeX('Metabolics ($W$)'))
+
 # Make tables of correlation coefficients -----------------
 
 library(psychometric)
@@ -2412,7 +2622,7 @@ for (minfunc1 in minparams){
   minfunc_count = minfunc_count + 1
   varfit_count=0
   
-  slope_table[[minfunc1]] = matrix(,nrow = length(fitting_vars)-1,ncol = 12)
+  slope_table[[minfunc1]] = matrix(,nrow = length(fitting_vars)-1,ncol = 17)
   
   for (var in fitting_vars[1:length(fitting_vars)-1]){
     varfit_count = varfit_count + 1
@@ -2434,9 +2644,26 @@ for (minfunc1 in minparams){
     slope_table[[minfunc1]][varfit_count,11]  = eval(parse(text = paste('fit_',minfunc1,'_',var,'$coefficients[2]',sep='')))
     slope_table[[minfunc1]][varfit_count,12]  = eval(parse(text = paste('fit_',minfunc1,'_',var,'$coefficients[4]',sep='')))
     
+    slope_table[[minfunc1]][varfit_count,13] = paste(formatC(rmcorrelation[[minfunc1]][[var]]$r,digits=5,format = 'g'),' [',
+                                                     formatC(rmcorrelation[[minfunc1]][[var]]$CI[1],digits=5,format = 'g'),' - ',
+                                                     formatC(rmcorrelation[[minfunc1]][[var]]$CI[2],digits=5,format = 'g'),']', sep = '')
+    
+    slope_table[[minfunc1]][varfit_count,14] = formatC(rmcorrelation[[minfunc1]][[var]]$model$coefficients[['Measure1']],digits=5,format = 'g')
+    
+    slope_table[[minfunc1]][varfit_count,15] = paste(formatC(eval(parse(text = paste('fit_',minfunc1,'_',var,'$r.squared',sep=''))),digits=5,format = 'g'),' [',
+                                                     formatC(CI.Rsq(eval(parse(text = paste('fit_',minfunc1,'_',var,'$r.squared',sep=''))),188,1)$LCL,digits=5,format = 'g'),' - ',
+                                                     formatC(CI.Rsq(eval(parse(text = paste('fit_',minfunc1,'_',var,'$r.squared',sep=''))),188,1)$UCL,digits=5,format = 'g'),']', sep = '')
+    
+    slope_table[[minfunc1]][varfit_count,16] = paste(formatC(eval(parse(text = paste('fit_',minfunc1,'_',var,'$coefficients[2]',sep=''))),digits=5,format = 'g'),' [',
+                                                     formatC(eval(parse(text = paste('fit_',minfunc1,'_',var,'$coefficients[2]',sep='')))-eval(parse(text = paste('fit_',minfunc1,'_',var,'$coefficients[4]',sep=''))),digits=5,format = 'g'),' - ',
+                                                     formatC(eval(parse(text = paste('fit_',minfunc1,'_',var,'$coefficients[2]',sep='')))+eval(parse(text = paste('fit_',minfunc1,'_',var,'$coefficients[4]',sep=''))),digits=5,format = 'g'),']', sep = '')
+    
+    slope_table[[minfunc1]][varfit_count,17]  = formatC(eval(parse(text = paste('fit_',minfunc1,'_',var,'$coefficients[4]',sep=''))),digits=5,format = 'g')
+    
   }
-  rownames(slope_table[[minfunc1]]) = fitting_vars[1:17]
-  colnames(slope_table[[minfunc1]]) = c('RMCorr-Rsq','RMCorr-LB','RMCorr-uB','RMCorr-Slope','RSQ','RSQ-LB','RSQ-UB','Slope','Slope-LB','Slope-UB','Slope','Slope-SE')
+  rownames(slope_table[[minfunc1]]) = fitting_vars[1:23]
+  colnames(slope_table[[minfunc1]]) = c('RMCorr-Rsq','RMCorr-LB','RMCorr-uB','RMCorr-Slope','RSQ','RSQ-LB','RSQ-UB','Slope','Slope-LB','Slope-UB','Slope','Slope-SE',
+                                        'RMCorr-Rsq [LB-UB]', 'RMCorr-Slope','R2 [LB-UB]','Slope [LB-UB]','Slope SE')
 }
 
 parameter_frame$a_val_lb = parameter_frame$a_val-1.96*parameter_frame$a_ste
@@ -2450,46 +2677,3 @@ parameter_frame$c_val_ub = parameter_frame$c_val+1.96*parameter_frame$c_ste
 
 parameter_frame$d_val_lb = parameter_frame$d_val-1.96*parameter_frame$d_ste
 parameter_frame$d_val_ub = parameter_frame$d_val+1.96*parameter_frame$d_ste
-# #=================== Compare RNG ==============================
-# # Comparing Between RNG and Non RNG
-# sumdata$rng = 0
-# sumdata_rng$rng = 1
-# rng_data = rbind(sumdata,sumdata_rng)
-vars = c('sumbhar','sumumber','sumuch','sumlich','summarg','sumtorque','sumtorque2','sumforcemus','sumforcemus2','sumactstate','sumactstate2','sumdrive','sumdrive2')
-vars_labs = c('Bhargava','Umberger','Uchida','Lichtwark','Margaria','Torque','Torque$^2$','Muscle Force','Muscle Force$^2$','Active State','Active State$^2$','Neural Drive','Neural Drive$^2$')
-
-k = 0
-param_strings = list()
-for (item in vars){
-  k = k + 1
-  var_lab = vars_labs[k]
-  row_data = filter(parameter_frame,minfunc == 'actstate2', var_lab == item)
-  
-  astring = paste(formatC(row_data$a_val,digits = 3, format = 'g'),'$pm$',
-                  formatC(row_data$a_ste,digits = 3, format = 'g'),' (',
-                  formatC(row_data$a_val_lb,digits = 3, format = 'g'),'-',
-                  formatC(row_data$a_val_ub,digits = 3, format = 'g'),')',sep='')
-  
-  bstring = paste(formatC(row_data$b_val,digits = 3, format = 'g'),'$pm$',
-                  formatC(row_data$b_ste,digits = 3, format = 'g'),' (',
-                  formatC(row_data$b_val_lb,digits = 3, format = 'g'),'-',
-                  formatC(row_data$b_val_ub,digits = 3, format = 'g'),')',sep='')
-  
-  cstring = paste(formatC(row_data$c_val,digits = 3, format = 'g'),'$pm$',
-                  formatC(row_data$c_ste,digits = 3, format = 'g'),' (',
-                  formatC(row_data$c_val_lb,digits = 3, format = 'g'),'-',
-                  formatC(row_data$c_val_ub,digits = 3, format = 'g'),')',sep='')
-  
-  dstring = paste(formatC(row_data$d_val,digits = 3, format = 'g'),'$pm$',
-                  formatC(row_data$d_ste,digits = 3, format = 'g'),' (',
-                  formatC(row_data$d_val_lb,digits = 3, format = 'g'),'-',
-                  formatC(row_data$d_val_ub,digits = 3, format = 'g'),')',sep='')
-  param_strings[['ab']][[item]] = paste(astring,' & ',bstring,' \\')
-  
-  param_strings[['cd']][[item]] = paste(cstring,' & ',dstring,' \\')
-}
-# ctrl<-trainControl(method = 'cv',number = 10)
-# lmCVFit <- train(mpowernet~.,data=testdata,method='lm',trControl=ctrl,metric="Rsquared")
-# 
-# library(brnn)
-# testNNlm <- train(mpowernet~.,data=testdata,method='brnn',neurons = 20)

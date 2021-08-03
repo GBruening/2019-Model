@@ -25,7 +25,7 @@ Colors = [...
          
 muscle_nums = {'an','bs','br','da','dp','pc','bb','tb'};
 
-%from langenderfer 2004
+%Matching holzbaur 2007?
 muscles.an.pcsa = 1.89E-4;
 muscles.bs.pcsa = 8.71E-4;  
 muscles.br.pcsa = 2.15E-4;  
@@ -34,6 +34,14 @@ muscles.dp.pcsa = 5.69E-4;
 muscles.pc.pcsa = 6.68E-4;
 muscles.bb.pcsa = (1.57+1.75)*1E-4;
 muscles.tb.pcsa = (4.13+3.60+3.21)*1E-4;
+% muscles.an.pcsa = 1.3E-4;
+% muscles.bs.pcsa = 7.71E-4;  
+% muscles.br.pcsa = 1.15E-4;  
+% muscles.da.pcsa = 5.46E-4;
+% muscles.dp.pcsa = 4.69E-4;
+% muscles.pc.pcsa = 3.07E-4;
+% muscles.bb.pcsa = (1.57+1.75)*1E-4;
+% muscles.tb.pcsa = (4.13+3.60+3.21)*1E-4;
 
 %FT from https://ac.els-cdn.com/0022510X73900233/1-s2.0-0022510X73900233-main.pdf?_tid=f2587a6a-d3c7-11e7-b5e6-00000aacb360&acdnat=1511824317_c65b8060cce54a277f6130de38be9eac
 % or http://www.sciencedirect.com/science/article/pii/S0021929004005147?via%3Dihub

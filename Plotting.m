@@ -254,6 +254,89 @@ end
 legend([ColorPref(:)],mass_legend);
 xlabel('Movement Duration');ylabel(sprintf('Joint Torque Dot^%g',expo));
 
+%% Joint Torque Rate
+%figure(4);clf(4); hold on;
+% subplot(2,2,4);hold on;
+for c = 1:4
+    for subj = 1:8
+        for s = 1:7
+            if isempty(vars{c,subj,s,t})
+                continue
+            end
+            tsum_rate=0;
+            tsum_rate2=0;
+            for t=1:n_tar
+                elbow_rate = sum(abs(diff(elbow{c,subj,s,t}.torque)/0.005))*0.005;
+                shoulder_rate = sum(abs(diff(shoulder{c,subj,s,t}.torque)/0.005))*0.005;
+                elbow_rate2 = sum(abs((diff(elbow{c,subj,s,t}.torque)/0.005).^2))*0.005;
+                shoulder_rate2 = sum(abs((diff(shoulder{c,subj,s,t}.torque)/0.005).^2))*0.005;
+                
+                tsum_rate = tsum_rate + elbow_rate + shoulder_rate;
+                
+                tsum_rate2 = tsum_rate2 + elbow_rate2 + shoulder_rate2;
+            end
+            tsum_rate1(c,subj,s) = tsum_rate/vars{c,subj,s,t}.speeds(s)/n_tar;
+            tsum_rate_sq(c,subj,s) = tsum_rate2/vars{c,subj,s,t}.speeds(s)/n_tar;
+            ColorPref(c) = plot(vars{c,subj,s,t}.speeds(s),...
+                tsum_rate/vars{c,subj,s,t}.speeds(s)/n_tar,'o','Color',ColorSet(c,:),...
+                'MarkerFaceColor',ColorSet(c,:));
+        end
+    end
+%     plot(vars{c,subj,s,t}.speeds,tsum1(c,:),'k-');
+end
+
+legend([ColorPref(:)],mass_legend);
+xlabel('Movement Duration');ylabel(sprintf('Joint Torque Rate Dot^%g',expo));
+
+%% Total Work/Rate
+%figure(4);clf(4); hold on;
+% subplot(2,2,4);hold on;
+for c = 1:4
+    for subj = 1:8
+        for s = 1:7
+            if isempty(vars{c,subj,s,t})
+                continue
+            end
+            wsum = 0;
+            wsum_rate=0;
+            wsum2 = 0;
+            wsum2_rate=0;
+            
+            for t=1:n_tar
+                elbow_work = sum(abs(elbow{c,subj,s,t}.torque.*theta{c,subj,s,t}.Ed)*0.005);
+                shoulder_work = sum(abs(shoulder{c,subj,s,t}.torque.*theta{c,subj,s,t}.Sd)*0.005);
+                elbow_work2 = sum(abs((elbow{c,subj,s,t}.torque.*theta{c,subj,s,t}.Ed).^2)*0.005);
+                shoulder_work2 = sum(abs((shoulder{c,subj,s,t}.torque.*theta{c,subj,s,t}.Sd).^2)*0.005);
+                
+                wsum = wsum + elbow_work + shoulder_work;                
+                wsum2 = wsum2 + elbow_work2 + shoulder_work2;
+                
+                elbow_work_rate = sum(abs((diff(elbow{c,subj,s,t}.torque.*theta{c,subj,s,t}.Ed)/0.005)))*0.005;
+                shoulder_work_rate = sum(abs((diff(shoulder{c,subj,s,t}.torque.*theta{c,subj,s,t}.Sd)/0.005)))*0.005;
+                elbow_work2_rate = sum(abs((diff(elbow{c,subj,s,t}.torque.*theta{c,subj,s,t}.Ed)/0.005).^2))*0.005;
+                shoulder_work2_rate = sum(abs((diff(shoulder{c,subj,s,t}.torque.*theta{c,subj,s,t}.Sd)/0.005).^2))*0.005;
+                
+                wsum_rate = wsum_rate + elbow_work_rate + shoulder_work_rate;                
+                wsum2_rate = wsum2_rate + elbow_work2_rate + shoulder_work2_rate;
+                
+            end
+            wsum1(c,subj,s) = wsum/vars{c,subj,s,t}.speeds(s)/n_tar;
+            wsum_sq(c,subj,s) = wsum2/vars{c,subj,s,t}.speeds(s)/n_tar;
+            
+            wsum1_rate(c,subj,s) = wsum_rate/vars{c,subj,s,t}.speeds(s)/n_tar;
+            wsum_rate_sq(c,subj,s) = wsum2_rate/vars{c,subj,s,t}.speeds(s)/n_tar;
+            
+            ColorPref(c) = plot(vars{c,subj,s,t}.speeds(s),...
+                wsum/vars{c,subj,s,t}.speeds(s)/n_tar,'o','Color',ColorSet(c,:),...
+                'MarkerFaceColor',ColorSet(c,:));
+        end
+    end
+%     plot(vars{c,subj,s,t}.speeds,tsum1(c,:),'k-');
+end
+
+legend([ColorPref(:)],mass_legend);
+xlabel('Movement Duration');ylabel(sprintf('Joint Torque Rate Dot^%g',expo));
+
 %% Umberger
 figure(44);clf(44); hold on;
 % subplot(2,2,3);hold on;
@@ -538,14 +621,37 @@ for c=1:4
             if met_data(c,subj,s)==0
                 1;
             end
-            A={c,subj,s,movedur(c,subj,s),met_data(c,subj,s),k1,...
-                tsum1(c,subj,s),f_out1(c,subj,s),fsum1(c,subj,s),...
-                ssum1(c,subj,s),asum1(c,subj,s),usum1(c,subj,s),...
-                tsum_sq(c,subj,s),f_out_sq(c,subj,s),fsum_sq(c,subj,s),...
-                ssum_sq(c,subj,s),asum_sq(c,subj,s),usum_sq(c,subj,s),...
-                bsum1(c,subj,s), uch_sum1(c,subj,s), bhar_sum1(c,subj,s),...
-                lich_sum1(c,subj,s), marg_sum1(c,subj,s),...
-                mine_sum1(c,subj,s), houd_sum1(c,subj,s)...
+            A={c,...
+                subj,...
+                s,...
+                movedur(c,subj,s),...
+                met_data(c,subj,s),... % 5
+                k1,...
+                tsum1(c,subj,s),...
+                tsum_rate1(c,subj,s),...
+                wsum1(c,subj,s),...
+                wsum1_rate(c,subj,s),... % 10
+                f_out1(c,subj,s),...
+                fsum1(c,subj,s),...
+                ssum1(c,subj,s),...
+                asum1(c,subj,s),...
+                usum1(c,subj,s),... % 15
+                tsum_sq(c,subj,s),...
+                tsum_rate_sq(c,subj,s),...
+                wsum_sq(c,subj,s),...
+                wsum_rate_sq(c,subj,s),... 
+                f_out_sq(c,subj,s),... % 20
+                fsum_sq(c,subj,s),...
+                ssum_sq(c,subj,s),...
+                asum_sq(c,subj,s),...
+                usum_sq(c,subj,s),...
+                bsum1(c,subj,s),... % 25
+                uch_sum1(c,subj,s),...
+                bhar_sum1(c,subj,s),...
+                lich_sum1(c,subj,s),...
+                marg_sum1(c,subj,s),...
+                mine_sum1(c,subj,s),...# 30
+                houd_sum1(c,subj,s)...
                 };
             dlmwrite(excel_file,A,'-append');
         end

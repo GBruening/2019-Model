@@ -56,7 +56,7 @@ if ~(beq(1,ii) > 0 && beq(1,ii) > A1(:,ii)'*[0,maxi(2),maxi(3),0,0,0,maxi(7),0]'
             && ~(beq(2,ii) < 0 && beq(2,ii) < A2(:,ii)'*[0,0,0,0,maxi(5),0,0,maxi(8)]')     
     stress_check = 0;     
 else
-    fprintf('Failed at c=%g,subj=%g,s=%g,t=%g,ii=',c,subj,s,t,ii);
+    fprintf('Failed at c=%g,subj=%g,s=%g,t=%g,ii=%g\n',c,subj,s,t,ii);
     init_guess = maxi*.95;
     stress_check = 1;
 end
